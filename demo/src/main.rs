@@ -1,4 +1,5 @@
 use fastdeploy_rs::enum_variables::ModelFormat;
+use fastdeploy_rs::model::*;
 use fastdeploy_rs::model::PPYOLOE;
 use fastdeploy_rs::result::DetectionResult;
 use fastdeploy_rs::runtime_option::RuntimeOption;

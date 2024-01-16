@@ -149,7 +149,7 @@ impl Drop for TwoDimArrayInt8 {
 }
 
 pub struct TwoDimArrayInt32 {
-    ptr: *mut FD_C_TwoDimArrayInt32,
+    pub ptr: *mut FD_C_TwoDimArrayInt32,
 }
 
 impl TwoDimArrayInt32 {
@@ -219,15 +219,15 @@ impl Drop for TwoDimArraySize {
 }
 
 pub struct ThreeDimArrayInt32 {
-    ptr: *mut FD_C_ThreeDimArrayInt32,
+    pub ptr: *mut FD_C_ThreeDimArrayInt32,
 }
 
 impl ThreeDimArrayInt32 {
     pub fn build(array: &mut Vec<Vec<Vec<i32>>>) -> ThreeDimArrayInt32 {
         unsafe {
-            let one_dim_int8 = TwoDimArrayInt32::build(&mut (*array.as_mut_ptr()));
+            let two_dim_int8 = TwoDimArrayInt32::build(&mut (*array.as_mut_ptr()));
             ThreeDimArrayInt32 {
-                ptr: &mut FD_C_ThreeDimArrayInt32 { size: array.len(), data: one_dim_int8.ptr }
+                ptr: &mut FD_C_ThreeDimArrayInt32 { size: array.len(), data: two_dim_int8.ptr }
             }
         }
     }
@@ -277,8 +277,16 @@ pub struct OneDimMat {
 impl OneDimMat {
     pub fn build(data: &mut Vec<Mat>) -> OneDimMat {
         unsafe {
-            let c = &mut (*data.as_mut_ptr()).ptr as *mut FD_C_Mat;
+            let c = &mut (*data.as_mut_ptr()).ptr;
             OneDimMat { ptr: FD_C_OneDimMat { size: data.len(), data: c } }
+        }
+    }
+}
+
+impl Drop for OneDimMat {
+    fn drop(&mut self) {
+        unsafe {
+            FD_C_DestroyOneDimMat(&mut self.ptr)
         }
     }
 }
@@ -302,6 +310,7 @@ impl Mask {
     }
 }
 
+
 pub struct OneDimMask {
     pub ptr: *mut FD_C_OneDimMask,
 }
@@ -316,8 +325,85 @@ impl OneDimMask {
             };
 
             OneDimMask {
-                ptr: &mut c_one_dim_mask.to_owned() as *mut FD_C_OneDimMask
+                ptr: &mut c_one_dim_mask.to_owned()
             }
+        }
+    }
+}
+
+pub struct Cstr {
+    pub ptr: *mut FD_C_Cstr,
+}
+
+impl Cstr {
+    pub fn build(data: &str) -> Cstr {
+        unsafe {
+            let c_cstr = FD_C_Cstr { size: data.len(), data: CString::new(data).unwrap().into_raw() };
+            Cstr {
+                ptr: &mut c_cstr.to_owned() as *mut FD_C_Cstr
+            }
+        }
+    }
+}
+
+impl Drop for Cstr {
+    fn drop(&mut self) {
+        unsafe {
+            FD_C_DestroyCstr(self.ptr)
+        }
+    }
+}
+
+pub struct OneDimArrayCstr {
+    pub ptr: *mut FD_C_OneDimArrayCstr,
+}
+
+impl OneDimArrayCstr {
+    pub fn build(data: &mut Vec<&str>) -> OneDimArrayCstr {
+        unsafe {
+            let c: *mut FD_C_Cstr = Cstr::build(*data.as_mut_ptr()).ptr;
+            let c_one_dim_mask = FD_C_OneDimArrayCstr {
+                size: data.len(),
+                data: c,
+            };
+            OneDimArrayCstr {
+                ptr: &mut c_one_dim_mask.to_owned() as *mut FD_C_OneDimArrayCstr
+            }
+        }
+    }
+}
+
+impl Drop for OneDimArrayCstr {
+    fn drop(&mut self) {
+        unsafe {
+            FD_C_DestroyOneDimArrayCstr(self.ptr)
+        }
+    }
+}
+
+pub struct TwoDimArrayCstr {
+    pub ptr: *mut FD_C_TwoDimArrayCstr,
+}
+
+impl TwoDimArrayCstr {
+    pub fn build(data: &mut Vec<Vec<&str>>) -> TwoDimArrayCstr {
+        unsafe {
+            let one_dim_c_str = OneDimArrayCstr::build(&mut (*data.as_mut_ptr()));
+            let c_two_dim_mask = FD_C_TwoDimArrayCstr {
+                size: data.len(),
+                data: one_dim_c_str.ptr,
+            };
+            TwoDimArrayCstr {
+                ptr: &mut c_two_dim_mask.to_owned() as *mut FD_C_TwoDimArrayCstr
+            }
+        }
+    }
+}
+
+impl Drop for TwoDimArrayCstr {
+    fn drop(&mut self) {
+        unsafe {
+            FD_C_DestroyTwoDimArrayCstr(self.ptr)
         }
     }
 }
