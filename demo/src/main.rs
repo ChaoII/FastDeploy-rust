@@ -13,10 +13,12 @@ fn main() {
     let runtime_option = RuntimeOption::new();
     runtime_option.use_ort_backend();
     let model = PPYOLOE::new(model_file, param_file, config_file, &runtime_option, ModelFormat::PADDLE);
-    let img = &Mat::imread("demo.jpg");
-    let result = &DetectionResult::new();
-    model.predict(img, result);
-    let s = &vis_detection(img, result, 0.45, 4, 1.0);
-    Mat::imwrite(s, "result.jpg");
-    result.str();
+    let img1 = Mat::imread("demo2.jpg");
+    let img2 = Mat::imread("demo.jpg");
+    let results = &mut vec![];
+    let c = &mut vec![img1, img2];
+    model.batch_predict(c, results);
+    // let s = &vis_detection(img, result, 0.45, 4, 1.0);
+    // Mat::imwrite(s, "result.jpg");
+    // result.str();
 }

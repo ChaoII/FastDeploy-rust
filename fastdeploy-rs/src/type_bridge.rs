@@ -277,8 +277,10 @@ pub struct OneDimMat {
 impl OneDimMat {
     pub fn build(data: &mut Vec<Mat>) -> OneDimMat {
         unsafe {
-            let c = &mut (*data.as_mut_ptr()).ptr;
-            OneDimMat { ptr: FD_C_OneDimMat { size: data.len(), data: c } }
+            let data_ptr = &mut (*data.as_mut_ptr()).ptr;
+            OneDimMat {
+                ptr: FD_C_OneDimMat { size: data.len(), data: data_ptr } // 返回结果
+            }
         }
     }
 }

@@ -62,17 +62,17 @@ pub struct DetectionResult {
     pub ptr: *mut FD_C_DetectionResult,
 }
 
-pub struct OneDimDetectionResult {
-    pub ptr: *mut FD_C_OneDimDetectionResult,
-}
-
-
 impl DetectionResult {
     pub fn new() -> DetectionResult {
         unsafe {
             DetectionResult {
                 ptr: FD_C_CreateDetectionResult(),
             }
+        }
+    }
+    pub fn from_c_ptr(data: *mut FD_C_DetectionResult) -> DetectionResult {
+        unsafe {
+            DetectionResult { ptr: data }
         }
     }
     pub fn str(&self) -> &str {
@@ -85,16 +85,16 @@ impl DetectionResult {
     }
 }
 
+pub struct OneDimDetectionResult {
+    pub ptr: *mut FD_C_OneDimDetectionResult,
+}
+
 impl OneDimDetectionResult {
-    pub fn build(data: &mut Vec<DetectionResult>) -> Self {
+    pub fn new() -> OneDimDetectionResult {
         unsafe {
-            let mut c = FD_C_OneDimDetectionResult {
-                size: data.len(),
-                data: (*data.as_mut_ptr()).ptr,
-            };
-            return OneDimDetectionResult {
-                ptr: &mut c as *mut FD_C_OneDimDetectionResult,
-            };
+            OneDimDetectionResult {
+                ptr: &mut FD_C_OneDimDetectionResult { size: 0, data: FD_C_CreateDetectionResult() },
+            }
         }
     }
 }
