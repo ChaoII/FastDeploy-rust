@@ -74,13 +74,12 @@ impl PPYOLOE {
             FD_C_PPYOLOEWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        let res = OneDimDetectionResult::new().ptr;
-        unsafe {
-            FD_C_PPYOLOEWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, res);
-            println!("{}", (*res).size)
-        }
-    }
+    // pub fn batch_predict(&self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     let res = OneDimDetectionResult::new(detect_result);
+    //     unsafe {
+    //         let ret = FD_C_PPYOLOEWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, res);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_PPYOLOEWrapperInitialized(self.ptr) != 0
@@ -116,11 +115,11 @@ impl PicoDet {
             FD_C_PicoDetWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_PicoDetWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_PicoDetWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_PicoDetWrapperInitialized(self.ptr) != 0
@@ -155,11 +154,11 @@ impl PPYOLO {
             FD_C_PPYOLOWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_PPYOLOWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_PPYOLOWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_PPYOLOWrapperInitialized(self.ptr) != 0
@@ -194,11 +193,11 @@ impl YOLOv3 {
             FD_C_YOLOv3WrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_YOLOv3WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_YOLOv3WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_YOLOv3WrapperInitialized(self.ptr) != 0
@@ -233,11 +232,11 @@ impl PaddleYOLOX {
             FD_C_PaddleYOLOXWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_PaddleYOLOXWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_PaddleYOLOXWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_PaddleYOLOXWrapperInitialized(self.ptr) != 0
@@ -272,11 +271,11 @@ impl FasterRCNN {
             FD_C_FasterRCNNWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_FasterRCNNWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_FasterRCNNWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_FasterRCNNWrapperInitialized(self.ptr) != 0
@@ -311,11 +310,11 @@ impl MaskRCNN {
             FD_C_MaskRCNNWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_MaskRCNNWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_MaskRCNNWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_MaskRCNNWrapperInitialized(self.ptr) != 0
@@ -350,11 +349,11 @@ impl SSD {
             FD_C_SSDWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_SSDWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_SSDWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_SSDWrapperInitialized(self.ptr) != 0
@@ -389,11 +388,11 @@ impl PaddleYOLOv5 {
             FD_C_PaddleYOLOv5WrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_PaddleYOLOv5WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_PaddleYOLOv5WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_PaddleYOLOv5WrapperInitialized(self.ptr) != 0
@@ -428,11 +427,11 @@ impl PaddleYOLOv6 {
             FD_C_PaddleYOLOv6WrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_PaddleYOLOv6WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_PaddleYOLOv6WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_PaddleYOLOv6WrapperInitialized(self.ptr) != 0
@@ -467,11 +466,11 @@ impl PaddleYOLOv7 {
             FD_C_PaddleYOLOv7WrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_PaddleYOLOv7WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_PaddleYOLOv7WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_PaddleYOLOv7WrapperInitialized(self.ptr) != 0
@@ -506,11 +505,11 @@ impl PaddleYOLOv8 {
             FD_C_PaddleYOLOv8WrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_PaddleYOLOv8WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_PaddleYOLOv8WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_PaddleYOLOv8WrapperInitialized(self.ptr) != 0
@@ -545,11 +544,11 @@ impl RTMDet {
             FD_C_RTMDetWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_RTMDetWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_RTMDetWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_RTMDetWrapperInitialized(self.ptr) != 0
@@ -584,11 +583,11 @@ impl CascadeRCNN {
             FD_C_CascadeRCNNWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_CascadeRCNNWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_CascadeRCNNWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_CascadeRCNNWrapperInitialized(self.ptr) != 0
@@ -623,11 +622,11 @@ impl PSSDet {
             FD_C_PSSDetWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_PSSDetWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_PSSDetWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_PSSDetWrapperInitialized(self.ptr) != 0
@@ -662,11 +661,11 @@ impl RetinaNet {
             FD_C_RetinaNetWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_RetinaNetWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_RetinaNetWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_RetinaNetWrapperInitialized(self.ptr) != 0
@@ -701,11 +700,11 @@ impl FCOS {
             FD_C_FCOSWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_FCOSWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_FCOSWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_FCOSWrapperInitialized(self.ptr) != 0
@@ -740,11 +739,11 @@ impl TTFNet {
             FD_C_TTFNetWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_TTFNetWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_TTFNetWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_TTFNetWrapperInitialized(self.ptr) != 0
@@ -779,11 +778,11 @@ impl TOOD {
             FD_C_TOODWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_TOODWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_TOODWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_TOODWrapperInitialized(self.ptr) != 0
@@ -818,11 +817,11 @@ impl GFL {
             FD_C_GFLWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_GFLWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_GFLWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_GFLWrapperInitialized(self.ptr) != 0
@@ -856,11 +855,11 @@ impl YOLOv5 {
             FD_C_YOLOv5WrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_YOLOv5WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_YOLOv5WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_YOLOv5WrapperInitialized(self.ptr) != 0
@@ -933,11 +932,11 @@ impl YOLOv7 {
             FD_C_YOLOv7WrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_YOLOv7WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_YOLOv7WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_YOLOv7WrapperInitialized(self.ptr) != 0
@@ -971,11 +970,11 @@ impl YOLOv8 {
             FD_C_YOLOv8WrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-        unsafe {
-            FD_C_YOLOv8WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
-        }
-    }
+    // pub fn batch_predict(&mut self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+    //     unsafe {
+    //         FD_C_YOLOv8WrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, OneDimDetectionResult::new().ptr);
+    //     }
+    // }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_YOLOv8WrapperInitialized(self.ptr) != 0

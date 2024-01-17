@@ -1,5 +1,4 @@
 use fastdeploy_rs::enum_variables::ModelFormat;
-use fastdeploy_rs::model::*;
 use fastdeploy_rs::model::PPYOLOE;
 use fastdeploy_rs::result::DetectionResult;
 use fastdeploy_rs::runtime_option::RuntimeOption;
@@ -13,12 +12,10 @@ fn main() {
     let runtime_option = RuntimeOption::new();
     runtime_option.use_ort_backend();
     let model = PPYOLOE::new(model_file, param_file, config_file, &runtime_option, ModelFormat::PADDLE);
-    let img1 = Mat::imread("demo2.jpg");
-    let img2 = Mat::imread("demo.jpg");
-    let results = &mut vec![];
-    let c = &mut vec![img1, img2];
-    model.batch_predict(c, results);
-    // let s = &vis_detection(img, result, 0.45, 4, 1.0);
-    // Mat::imwrite(s, "result.jpg");
+    let img = &Mat::imread("demo2.jpg");
+    let result = &DetectionResult::new();
+    model.predict(img, result);
+    let s = &vis_detection(img, result, 0.45, 2, 0.5);
+    Mat::imwrite(s, "result.jpg");
     // result.str();
 }
