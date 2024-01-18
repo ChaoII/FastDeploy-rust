@@ -88,7 +88,7 @@ impl LitePowerMode {
     }
 }
 
-
+#[derive(Debug)]
 pub enum ResultType {
     UNKNOWN_RESULT,
     CLASSIFY,
@@ -106,7 +106,7 @@ pub enum ResultType {
 }
 
 impl ResultType {
-    pub fn into_raw(self) -> i32 {
+    pub fn to_c_type(self) -> i32 {
         match self {
             ResultType::UNKNOWN_RESULT => FD_C_ModelFormat_UNKNOWN_RESULT,
             ResultType::CLASSIFY => FD_C_ModelFormat_CLASSIFY,
@@ -121,6 +121,24 @@ impl ResultType {
             ResultType::MASK => FD_C_ModelFormat_MASK,
             ResultType::KEYPOINT_DETECTION => FD_C_ModelFormat_KEYPOINT_DETECTION,
             ResultType::HEADPOSE => FD_C_ModelFormat_HEADPOSE,
+        }
+    }
+    pub fn from_c_type(type_: i32) -> ResultType {
+        match type_ {
+            FD_C_ModelFormat_UNKNOWN_RESULT => ResultType::UNKNOWN_RESULT,
+            FD_C_ModelFormat_CLASSIFY => ResultType::CLASSIFY,
+            FD_C_ModelFormat_DETECTION => ResultType::DETECTION,
+            FD_C_ModelFormat_SEGMENTATION => ResultType::SEGMENTATION,
+            FD_C_ModelFormat_OCR => ResultType::OCR,
+            FD_C_ModelFormat_MOT => ResultType::MOT,
+            FD_C_ModelFormat_FACE_DETECTION => ResultType::FACE_DETECTION,
+            FD_C_ModelFormat_FACE_ALIGNMENT => ResultType::FACE_ALIGNMENT,
+            FD_C_ModelFormat_FACE_RECOGNITION => ResultType::FACE_RECOGNITION,
+            FD_C_ModelFormat_MATTING => ResultType::MATTING,
+            FD_C_ModelFormat_MASK => ResultType::MASK,
+            FD_C_ModelFormat_KEYPOINT_DETECTION => ResultType::KEYPOINT_DETECTION,
+            FD_C_ModelFormat_HEADPOSE => ResultType::HEADPOSE,
+            _ => ResultType::UNKNOWN_RESULT,
         }
     }
 }

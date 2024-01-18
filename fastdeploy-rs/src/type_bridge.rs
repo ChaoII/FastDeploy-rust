@@ -4,6 +4,68 @@ use fastdeploy_bind::*;
 
 use crate::enum_variables::ResultType;
 
+pub mod common {
+    use std::slice;
+
+    use fastdeploy_bind::{FD_C_Bool, FD_C_OneDimArrayFloat, FD_C_OneDimArrayInt32, FD_C_OneDimArrayInt64, FD_C_OneDimArrayUint8, FD_C_TwoDimArrayFloat};
+
+    pub fn fd_c_bool_to_bool(ret: FD_C_Bool) -> bool {
+        ret >= 1
+    }
+
+    pub fn fd_c_one_dim_array_float_to_vec_float(array: FD_C_OneDimArrayFloat) -> Vec<f32> {
+        if array.data.is_null() {
+            return vec![];
+        }
+        unsafe {
+            slice::from_raw_parts(array.data as *const f32, array.size).to_vec()
+        }
+    }
+
+    pub fn fd_c_one_dim_array_int32_to_vec_i32(array: FD_C_OneDimArrayInt32) -> Vec<i32> {
+        if array.data.is_null() {
+            return vec![];
+        }
+        unsafe {
+            slice::from_raw_parts(array.data as *const i32, array.size).to_vec()
+        }
+    }
+
+    pub fn fd_c_one_dim_array_int64_to_vec_i64(array: FD_C_OneDimArrayInt64) -> Vec<i64> {
+        if array.data.is_null() {
+            return vec![];
+        }
+        unsafe {
+            slice::from_raw_parts(array.data as *const i64, array.size).to_vec()
+        }
+    }
+
+    pub fn fd_c_one_dim_array_uint8_to_vec_u8(array: FD_C_OneDimArrayUint8) -> Vec<u8> {
+        if array.data.is_null() {
+            return vec![];
+        }
+        unsafe {
+            slice::from_raw_parts(array.data as *const u8, array.size).to_vec()
+        }
+    }
+
+
+    pub fn fd_c_two_dim_array_float_to_vec_float(array: *mut FD_C_TwoDimArrayFloat) -> Vec<Vec<f32>> {
+        unsafe {
+            if array.is_null() || (*array).data.is_null() {
+                return vec![];
+            }
+            let mut result = vec![];
+            for i in 0..(*array).size {
+                let ptr = (*array).data.wrapping_add(i);
+                result.push(fd_c_one_dim_array_float_to_vec_float(*ptr))
+            }
+            return result;
+        }
+    }
+}
+
+
 pub struct OneDimArrayUint8 {
     ptr: *mut FD_C_OneDimArrayUint8,
 }
@@ -262,13 +324,13 @@ impl Mat {
     }
 }
 
-impl Drop for Mat {
-    fn drop(&mut self) {
-        unsafe {
-            FD_C_DestroyMat(self.ptr)
-        }
-    }
-}
+// impl Drop for Mat {
+//     fn drop(&mut self) {
+//         unsafe {
+//             FD_C_DestroyMat(self.ptr)
+//         }
+//     }
+// }
 
 pub struct OneDimMat {
     pub ptr: FD_C_OneDimMat,
@@ -277,9 +339,8 @@ pub struct OneDimMat {
 impl OneDimMat {
     pub fn build(data: &mut Vec<Mat>) -> OneDimMat {
         unsafe {
-            let data_ptr = &mut (*data.as_mut_ptr()).ptr;
             OneDimMat {
-                ptr: FD_C_OneDimMat { size: data.len(), data: data_ptr } // 返回结果
+                ptr: FD_C_OneDimMat { size: data.len(), data: &mut (*data.as_mut_ptr()).ptr }
             }
         }
     }
@@ -303,7 +364,7 @@ impl Mask {
             let c_mask = FD_C_Mask {
                 data: *OneDimArrayUint8::build(data).ptr,
                 shape: *OneDimArrayInt64::build(shape).ptr,
-                type_: type_.into_raw(),
+                type_: type_.to_c_type(),
             };
             Mask {
                 ptr: &mut c_mask.to_owned() as *mut FD_C_Mask,

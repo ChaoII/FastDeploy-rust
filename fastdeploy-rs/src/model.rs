@@ -7,7 +7,7 @@ use std::ffi::CString;
 use fastdeploy_bind::*;
 
 use crate::enum_variables::ModelFormat;
-use crate::result::{ClassifyResult, DetectionResult, OcrResult, OneDimClassifyResult, OneDimDetectionResult, OneDimOcrResult, OneDimSegmentationResult, SegmentationResult};
+use crate::result::{ClassifyResult, DetectionResult, OcrResult, OneDimClassifyResult, OneDimOcrResult, OneDimSegmentationResult, SegmentationResult};
 use crate::runtime_option::RuntimeOption;
 use crate::type_bridge::{Cstr, Mat, OneDimArrayCstr, OneDimArrayFloat, OneDimArrayInt32, OneDimMat, ThreeDimArrayInt32, TwoDimArrayCstr, TwoDimArrayInt32};
 
@@ -74,12 +74,16 @@ impl PPYOLOE {
             FD_C_PPYOLOEWrapperPredict(self.ptr, img.ptr, detect_result.ptr);
         }
     }
-    // pub fn batch_predict(&self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
-    //     let res = OneDimDetectionResult::new(detect_result);
-    //     unsafe {
-    //         let ret = FD_C_PPYOLOEWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr, res);
-    //     }
-    // }
+    pub fn batch_predict(&self, imgs: &mut Vec<Mat>, detect_result: &mut Vec<DetectionResult>) {
+        unsafe {
+            let mut s: Vec<FD_C_Mat> = imgs.iter().map(|x| x.ptr).collect();
+            let s = FD_C_OneDimMat { size: imgs.len(), data: s.as_mut_ptr() };
+            let result = &mut FD_C_OneDimDetectionResult { size: 0, data: std::ptr::null_mut() } as *mut FD_C_OneDimDetectionResult;
+            let ret = FD_C_PPYOLOEWrapperBatchPredict(self.ptr, s, result);
+            let rr = DetectionResult::convert_c_array_to_rust_slice(result);
+            // println!("{:#?}", rr);
+        }
+    }
     pub fn initialized(&mut self) -> bool {
         unsafe {
             FD_C_PPYOLOEWrapperInitialized(self.ptr) != 0
@@ -87,11 +91,11 @@ impl PPYOLOE {
     }
 }
 
-impl Drop for PPYOLOE {
-    fn drop(&mut self) {
-        unsafe { FD_C_DestroyPPYOLOEWrapper(self.ptr); }
-    }
-}
+// impl Drop for PPYOLOE {
+//     fn drop(&mut self) {
+//         unsafe { FD_C_DestroyPPYOLOEWrapper(self.ptr); }
+//     }
+// }
 
 
 pub struct PicoDet {
