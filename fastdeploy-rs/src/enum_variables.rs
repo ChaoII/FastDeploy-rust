@@ -88,7 +88,7 @@ impl LitePowerMode {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ResultType {
     UNKNOWN_RESULT,
     CLASSIFY,

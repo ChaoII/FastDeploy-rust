@@ -5,5 +5,5 @@ pub mod result;
 pub mod type_bridge;
 pub mod visual;
 
-
+pub mod errors;
 
