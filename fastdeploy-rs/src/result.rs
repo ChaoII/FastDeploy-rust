@@ -18,6 +18,16 @@ pub struct ClassifyResult {
     pub type_: ResultType,
 }
 
+impl ClassifyResult {
+    pub fn build(label_ids: Vec<i32>, scores: Vec<f32>) -> Self {
+        Self {
+            label_ids,
+            scores,
+            type_: ResultType::CLASSIFY,
+        }
+    }
+}
+
 impl Default for ClassifyResult {
     fn default() -> Self {
         Self {
@@ -28,19 +38,19 @@ impl Default for ClassifyResult {
     }
 }
 
-impl From<ClassifyResultWrapper> for ClassifyResult {
-    fn from(mut value: ClassifyResultWrapper) -> Self {
+impl From<FD_C_ClassifyResult> for ClassifyResult {
+    fn from(mut value: FD_C_ClassifyResult) -> Self {
         unsafe {
             Self {
-                label_ids: fd_c_one_dim_array_int32_to_vec_i32((*value.ptr).label_ids),
-                scores: fd_c_one_dim_array_float_to_vec_float((*value.ptr).scores),
-                type_: ResultType::from_c_type((*value.ptr).type_),
+                label_ids: fd_c_one_dim_array_int32_to_vec_i32(value.label_ids),
+                scores: fd_c_one_dim_array_float_to_vec_float(value.scores),
+                type_: ResultType::from_c_type(value.type_),
             }
         }
     }
 }
 
-struct ClassifyResultWrapper {
+pub struct ClassifyResultWrapper {
     pub ptr: *mut FD_C_ClassifyResult,
 }
 
@@ -62,7 +72,7 @@ impl Drop for ClassifyResultWrapper {
     }
 }
 
-struct OneDimClassifyResultWrapper {
+pub struct OneDimClassifyResultWrapper {
     pub ptr: *mut FD_C_OneDimClassifyResult,
 }
 
@@ -215,49 +225,63 @@ impl Default for DetectionResult {
     }
 }
 
-
-pub struct OcrResult {
-    pub ptr: *mut FD_C_OCRResult,
+#[derive(Debug)]
+pub struct RecognizerResult {
+    pub text: String,
+    pub score: f32,
 }
 
-impl OcrResult {
-    pub fn new() -> OcrResult {
+impl RecognizerResult {
+    pub fn new(text: String, score: f32) -> Self {
+        Self {
+            text,
+            score,
+        }
+    }
+}
+
+
+pub struct OcrResultWrapper {
+    pub ptr: Box<FD_C_OCRResult>,
+}
+
+impl Default for OcrResultWrapper {
+    fn default() -> Self {
         unsafe {
-            OcrResult {
-                ptr: FD_C_CreateOCRResult(),
+            Self {
+                ptr: Box::new(*FD_C_CreateOCRResult()),
             }
         }
     }
-    pub fn str(&self) -> &str {
-        unsafe {
-            let s: &str = &String::from_utf8(vec![0x01; 10240]).unwrap();
-            let c = CString::new(s).unwrap().into_raw();
-            FD_C_OCRResultStr(self.ptr, c);
-            return CStr::from_ptr(c).to_str().unwrap();
-        }
-    }
 }
 
-impl Drop for OcrResult {
+impl Drop for OcrResultWrapper {
     fn drop(&mut self) {
         unsafe {
-            FD_C_DestroyOCRResult(self.ptr);
+            FD_C_DestroyOCRResult(self.ptr.as_mut());
         }
     }
 }
 
-pub struct OneDimOcrResult {
-    pub ptr: *mut FD_C_OneDimOCRResult,
+pub struct OneDimOcrResultWrapper {
+    pub ptr: Box<FD_C_OneDimOCRResult>,
 }
 
-impl OneDimOcrResult {
-    pub fn new(data: &mut Vec<OcrResult>) -> OneDimOcrResult {
+impl OneDimOcrResultWrapper {}
+
+impl Default for OneDimOcrResultWrapper {
+    fn default() -> Self {
         unsafe {
-            let mut c = FD_C_OneDimOCRResult { size: data.len(), data: (*data.as_mut_ptr()).ptr };
-            OneDimOcrResult {
-                ptr: &mut c as *mut FD_C_OneDimOCRResult,
+            Self {
+                ptr: Box::new(FD_C_OneDimOCRResult { size: 0, data: OcrResultWrapper::default().ptr.as_mut() }),
             }
         }
+    }
+}
+
+impl Drop for OneDimOcrResultWrapper {
+    fn drop(&mut self) {
+        // FD_C_DestroyOneDimOcrResult(self.ptr.as_mut());
     }
 }
 

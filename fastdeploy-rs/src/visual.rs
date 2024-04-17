@@ -1,10 +1,8 @@
 use fastdeploy_bind::*;
 
-use crate::type_bridge::{Mat, OneDimArrayCstr};
+use crate::type_bridge::Mat;
 
 pub mod detection {
-    use crate::result::DetectionResult;
-    use super::*;
     // pub fn vis_detection(img: &Mat, result: &DetectionResult, score_threshold: f32, line_size: i32, font_size: f32) -> Mat {
     //     unsafe {
     //         Mat {
@@ -23,10 +21,6 @@ pub mod detection {
 }
 
 pub mod classify {
-    use crate::result::ClassifyResult;
-
-    use super::*;
-
     // pub fn vis_classify(img: &Mat, result: &ClassifyResult, top_k: i32, score_threshold: f32, font_size: f32) -> Mat {
     //     unsafe {
     //         Mat {
