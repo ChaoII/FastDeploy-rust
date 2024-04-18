@@ -9,9 +9,9 @@ use fastdeploy_bind::*;
 
 use crate::enum_variables::ModelFormat;
 use crate::errors::FastDeployError;
-use crate::result::{ClassifyResult, ClassifyResultWrapper, DetectionResult, DetectResultWrapper, OcrResultWrapper, OneDimClassifyResultWrapper, OneDimDetectResultWrapper, OneDimOcrResultWrapper, RecognizerResult};
+use crate::result::{ClassifyResult, ClassifyResultWrapper, DetectionResult, DetectResultWrapper, OCRResult, OcrResultWrapper, OneDimClassifyResultWrapper, OneDimDetectResultWrapper, OneDimOcrResultWrapper, OneDimSegmentationResult, RecognizerResult, SegmentationResult, SegmentationResultWrapper};
 use crate::runtime_option::RuntimeOption;
-use crate::type_bridge::{CstrWrapper, Mat, OneDimArrayCstrWrapper, OneDimArrayFloatWrapper, OneDimArrayInt32Wrapper, ThreeDimArrayInt32Wrapper, TwoDimArrayCstrWrapper, TwoDimArrayInt32Wrapper};
+use crate::type_bridge::{CstrWrapper, Mat, OneDimArrayCstrWrapper, OneDimArrayFloatWrapper, OneDimArrayInt32Wrapper, OneDimMatWrapper, ThreeDimArrayInt32Wrapper, TwoDimArrayCstrWrapper, TwoDimArrayInt32Wrapper};
 use crate::type_bridge::common::fd_c_bool_to_bool;
 
 pub struct PaddleClasModel {
@@ -1610,7 +1610,7 @@ impl Drop for YOLOX {
 
 
 pub struct Recognizer {
-    ptr: *mut FD_C_RecognizerWrapper,
+    pub ptr: *mut FD_C_RecognizerWrapper,
 }
 
 impl Recognizer {
@@ -1641,8 +1641,9 @@ impl Recognizer {
         let mut score = OneDimArrayFloatWrapper::default();
         let mut result = Vec::with_capacity(images.len());
         unsafe {
-            let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
-            let ret = FD_C_RecognizerWrapperBatchPredict(self.ptr, one_dim_image,
+            // let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
+            let one_dim_image = OneDimMatWrapper::from(images).ptr;
+            let ret = FD_C_RecognizerWrapperBatchPredict(self.ptr, *one_dim_image,
                                                          text.ptr.as_mut(),
                                                          score.ptr.as_mut());
             if !fd_c_bool_to_bool(ret) {
@@ -1663,6 +1664,7 @@ impl Recognizer {
 
 impl Drop for Recognizer {
     fn drop(&mut self) {
+        println!("=========:drop Recognizer");
         unsafe { FD_C_DestroyRecognizerWrapper(self.ptr); }
     }
 }
@@ -1725,6 +1727,7 @@ impl Classifier {
 
 impl Drop for Classifier {
     fn drop(&mut self) {
+        println!("=========:drop Classifier");
         unsafe {
             FD_C_DestroyClassifierWrapper(self.ptr);
         }
@@ -1782,6 +1785,7 @@ impl DBDetector {
 
 impl Drop for DBDetector {
     fn drop(&mut self) {
+        println!("=========:drop DBDetector");
         unsafe {
             FD_C_DestroyDBDetectorWrapper(self.ptr);
         }
@@ -1812,7 +1816,7 @@ impl StructureV2Table {
             FD_C_StructureV2TableWrapperInitialized(self.ptr) != 0
         }
     }
-    pub fn predict(&self, image: Mat) -> Result<(Vec<Vec<i32>>, Vec<&str>), FastDeployError> {
+    pub fn predict(&self, image: Mat) -> Result<(Vec<Vec<i32>>, Vec<String>), FastDeployError> {
         unsafe {
             let mut boxes_result = TwoDimArrayInt32Wrapper::default();
             let mut structure_result = OneDimArrayCstrWrapper::default();
@@ -1868,19 +1872,31 @@ impl PPOCRv2 {
             FD_C_PPOCRv2WrapperInitialized(self.ptr) != 0
         }
     }
-    pub fn predict(&self, image: Mat) -> bool {
+    pub fn predict(&self, image: Mat) -> Result<OCRResult, FastDeployError> {
         unsafe {
-            let mut ocr_result = OcrResultWrapper::default();
-            FD_C_PPOCRv2WrapperPredict(self.ptr, image.ptr, ocr_result.ptr.as_mut()) != 0
+            let mut ocr_result = OcrResultWrapper::new();
+            let ret = FD_C_PPOCRv2WrapperPredict(self.ptr, image.ptr, ocr_result.ptr);
+            if !fd_c_bool_to_bool(ret) {
+                return Err(FastDeployError::PredictError);
+            }
+            return Ok(OCRResult::from(*ocr_result.ptr));
         }
     }
 
-    pub fn batch_predict(&self, images: &mut Vec<Mat>) -> bool {
+    pub fn batch_predict(&self, images: &mut Vec<Mat>) -> Result<Vec<OCRResult>, FastDeployError> {
         unsafe {
             let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
             let mut ocr_results = OneDimOcrResultWrapper::default();
-            FD_C_PPOCRv2WrapperBatchPredict(self.ptr, one_dim_image,
-                                            ocr_results.ptr.as_mut()) != 0
+            let ret = FD_C_PPOCRv2WrapperBatchPredict(self.ptr, one_dim_image,
+                                                      ocr_results.ptr.as_mut());
+            if !fd_c_bool_to_bool(ret) {
+                return Err(FastDeployError::PredictError);
+            }
+            let mut result = Vec::with_capacity(images.len());
+            for i in 0..ocr_results.ptr.size {
+                result.push(OCRResult::from(*ocr_results.ptr.data.wrapping_add(i)));
+            }
+            return Ok(result);
         }
     }
 }
@@ -1892,139 +1908,185 @@ impl Drop for PPOCRv2 {
         }
     }
 }
+
+pub struct PPOCRv3 {
+    pub ptr: *mut FD_C_PPOCRv3Wrapper,
+}
+
+impl PPOCRv3 {
+    pub fn new(det_model: &DBDetector, cls_model: &Classifier, rec_model: &Recognizer) -> PPOCRv3 {
+        PPOCRv3 {
+            ptr: unsafe {
+                FD_C_CreatePPOCRv3Wrapper(det_model.ptr, cls_model.ptr, rec_model.ptr)
+            }
+        }
+    }
+
+    pub fn initialized(&self) -> bool {
+        unsafe {
+            FD_C_PPOCRv3WrapperInitialized(self.ptr) != 0
+        }
+    }
+    pub fn predict(&self, image: Mat) -> Result<OCRResult, FastDeployError> {
+        unsafe {
+            let mut ocr_result = OcrResultWrapper::new();
+            let ret = FD_C_PPOCRv3WrapperPredict(self.ptr, image.ptr, ocr_result.ptr);
+            if !fd_c_bool_to_bool(ret) {
+                return Err(FastDeployError::PredictError);
+            }
+            return Ok(OCRResult::from(*ocr_result.ptr));
+        }
+    }
+
+    pub fn batch_predict(&self, images: &mut Vec<Mat>) -> Result<Vec<OCRResult>, FastDeployError> {
+        unsafe {
+            let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
+            let mut ocr_results = OneDimOcrResultWrapper::default();
+            let ret = FD_C_PPOCRv3WrapperBatchPredict(self.ptr, one_dim_image,
+                                                      ocr_results.ptr.as_mut());
+            if !fd_c_bool_to_bool(ret) {
+                return Err(FastDeployError::PredictError);
+            }
+            let mut result = Vec::with_capacity(images.len());
+            for i in 0..ocr_results.ptr.size {
+                result.push(OCRResult::from(*ocr_results.ptr.data.wrapping_add(i)));
+            }
+            return Ok(result);
+        }
+    }
+}
+
+impl Drop for PPOCRv3 {
+    fn drop(&mut self) {
+        unsafe {
+            FD_C_DestroyPPOCRv3Wrapper(self.ptr);
+        }
+    }
+}
+
+pub struct PPStructureV2Table {
+    pub ptr: *mut FD_C_PPStructureV2TableWrapper,
+}
+
+impl PPStructureV2Table {
+    pub fn new(det_model: &DBDetector,
+               rec_model: &Recognizer,
+               table_model: StructureV2Table) -> PPStructureV2Table {
+        PPStructureV2Table {
+            ptr: unsafe {
+                FD_C_CreatePPStructureV2TableWrapper(
+                    det_model.ptr,
+                    rec_model.ptr,
+                    table_model.ptr,
+                )
+            }
+        }
+    }
+
+    pub fn initialized(&self) -> bool {
+        unsafe {
+            FD_C_PPStructureV2TableWrapperInitialized(self.ptr) != 0
+        }
+    }
+    pub fn predict(&self, image: Mat) -> Result<OCRResult, FastDeployError> {
+        unsafe {
+            let mut ocr_result = OcrResultWrapper::new();
+            let ret = FD_C_PPStructureV2TableWrapperPredict(self.ptr, image.ptr, ocr_result.ptr);
+            if !fd_c_bool_to_bool(ret) {
+                return Err(FastDeployError::PredictError);
+            }
+            return Ok(OCRResult::from(*ocr_result.ptr));
+        }
+    }
+
+    pub fn batch_predict(&self, images: &mut Vec<Mat>) -> Result<Vec<OCRResult>, FastDeployError> {
+        unsafe {
+            let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
+            let mut ocr_results = OneDimOcrResultWrapper::default();
+            let ret = FD_C_PPStructureV2TableWrapperBatchPredict(self.ptr, one_dim_image,
+                                                                 ocr_results.ptr.as_mut());
+            if !fd_c_bool_to_bool(ret) {
+                return Err(FastDeployError::PredictError);
+            }
+            let mut result = Vec::with_capacity(images.len());
+            for i in 0..ocr_results.ptr.size {
+                result.push(OCRResult::from(*ocr_results.ptr.data.wrapping_add(i)));
+            }
+            return Ok(result);
+        }
+    }
+}
+
+impl Drop for PPStructureV2Table {
+    fn drop(&mut self) {
+        unsafe {
+            FD_C_DestroyPPStructureV2TableWrapper(self.ptr);
+        }
+    }
+}
+
 //
-// pub struct PPOCRv3 {
-//     pub ptr: *mut FD_C_PPOCRv3Wrapper,
-// }
-//
-// impl PPOCRv3 {
-//     pub fn new(det_model: &DBDetector, cls_model: &Classifier, rec_model: &Recognizer) -> PPOCRv3 {
-//         PPOCRv3 {
-//             ptr: unsafe {
-//                 FD_C_CreatePPOCRv3Wrapper(det_model.ptr, cls_model.ptr, rec_model.ptr)
-//             }
-//         }
-//     }
-//
-//     pub fn initialized(&self) -> bool {
-//         unsafe {
-//             FD_C_PPOCRv3WrapperInitialized(self.ptr) != 0
-//         }
-//     }
-//     pub fn predict(&self, img: Mat, result: &OcrResult) -> bool {
-//         unsafe {
-//             FD_C_PPOCRv3WrapperPredict(self.ptr, img.ptr, result.ptr) != 0
-//         }
-//     }
-//
-//     pub fn batch_predict(&self, img: &mut Vec<Mat>, results: &mut Vec<OcrResult>) -> bool {
-//         unsafe {
-//             FD_C_PPOCRv3WrapperBatchPredict(self.ptr, OneDimMat::build(img).ptr,
-//                                             OneDimOcrResult::new(results).ptr) != 0
-//         }
-//     }
-// }
-//
-// impl Drop for PPOCRv3 {
-//     fn drop(&mut self) {
-//         unsafe {
-//             FD_C_DestroyPPOCRv3Wrapper(self.ptr);
-//         }
-//     }
-// }
-//
-// pub struct PPStructureV2Table {
-//     pub ptr: *mut FD_C_PPStructureV2TableWrapper,
-// }
-//
-// impl PPStructureV2Table {
-//     pub fn new(det_model: &DBDetector,
-//                rec_model: &Recognizer,
-//                table_model: StructureV2Table) -> PPStructureV2Table {
-//         PPStructureV2Table {
-//             ptr: unsafe {
-//                 FD_C_CreatePPStructureV2TableWrapper(
-//                     det_model.ptr,
-//                     rec_model.ptr,
-//                     table_model.ptr,
-//                 )
-//             }
-//         }
-//     }
-//
-//     pub fn initialized(&self) -> bool {
-//         unsafe {
-//             FD_C_PPStructureV2TableWrapperInitialized(self.ptr) != 0
-//         }
-//     }
-//     pub fn predict(&self, img: Mat, result: &mut OcrResult) -> bool {
-//         unsafe {
-//             FD_C_PPStructureV2TableWrapperPredict(self.ptr, img.ptr, result.ptr) != 0
-//         }
-//     }
-//
-//     pub fn batch_predict(&self, img: &mut Vec<Mat>, results: &mut Vec<OcrResult>) -> bool {
-//         unsafe {
-//             FD_C_PPStructureV2TableWrapperBatchPredict(self.ptr, OneDimMat::build(img).ptr,
-//                                                        OneDimOcrResult::new(results).ptr) != 0
-//         }
-//     }
-// }
-//
-// impl Drop for PPStructureV2Table {
-//     fn drop(&mut self) {
-//         unsafe {
-//             FD_C_DestroyPPStructureV2TableWrapper(self.ptr);
-//         }
-//     }
-// }
-//
-// pub struct PaddleSegModel {
-//     ptr: *mut FD_C_PaddleSegModelWrapper,
-// }
-//
-// impl PaddleSegModel {
-//     pub fn new(model_file: &str, params_file: &str, config_file: &str, runtime_option: &RuntimeOption, model_format: &ModelFormat) -> PaddleSegModel {
-//         PaddleSegModel {
-//             ptr: unsafe {
-//                 FD_C_CreatePaddleSegModelWrapper(
-//                     CString::new(model_file).unwrap().into_raw(),
-//                     CString::new(params_file).unwrap().into_raw(),
-//                     CString::new(config_file).unwrap().into_raw(),
-//                     runtime_option.ptr,
-//                     model_format.to_raw(),
-//                 )
-//             }
-//         }
-//     }
-//
-//     pub fn initialized(&self) -> bool {
-//         unsafe {
-//             FD_C_PaddleSegModelWrapperInitialized(self.ptr) != 0
-//         }
-//     }
-//     pub fn predict(&self, img: Mat, result: &mut SegmentationResult) -> bool {
-//         unsafe {
-//             FD_C_PaddleSegModelWrapperPredict(self.ptr, img.ptr, result.ptr) != 0
-//         }
-//     }
-//
-//     pub fn batch_predict(&self, imgs: &mut Vec<Mat>, results: &mut Vec<SegmentationResult>) -> bool {
-//         unsafe {
-//             FD_C_PaddleSegModelWrapperBatchPredict(self.ptr, OneDimMat::build(imgs).ptr,
-//                                                    OneDimSegmentationResult::new(results).ptr) != 0
-//         }
-//     }
-// }
-//
-// impl Drop for PaddleSegModel {
-//     fn drop(&mut self) {
-//         unsafe {
-//             FD_C_DestroyPaddleSegModelWrapper(self.ptr);
-//         }
-//     }
-// }
-//
+pub struct PaddleSegModel {
+    ptr: *mut FD_C_PaddleSegModelWrapper,
+}
+
+impl PaddleSegModel {
+    pub fn new(model_file: &str, params_file: &str, config_file: &str, runtime_option: &RuntimeOption, model_format: &ModelFormat) -> PaddleSegModel {
+        PaddleSegModel {
+            ptr: unsafe {
+                FD_C_CreatePaddleSegModelWrapper(
+                    CString::new(model_file).unwrap().into_raw(),
+                    CString::new(params_file).unwrap().into_raw(),
+                    CString::new(config_file).unwrap().into_raw(),
+                    runtime_option.ptr,
+                    model_format.to_raw(),
+                )
+            }
+        }
+    }
+
+    pub fn initialized(&self) -> bool {
+        unsafe {
+            FD_C_PaddleSegModelWrapperInitialized(self.ptr) != 0
+        }
+    }
+    pub fn predict(&self, image: Mat) -> Result<SegmentationResult, FastDeployError> {
+        unsafe {
+            let mut segmentation_result = SegmentationResultWrapper::new();
+            let ret = FD_C_PaddleSegModelWrapperPredict(self.ptr, image.ptr, segmentation_result.ptr);
+            if !fd_c_bool_to_bool(ret) {
+                return Err(FastDeployError::PredictError);
+            }
+            return Ok(SegmentationResult::from(*segmentation_result.ptr));
+        }
+    }
+
+    pub fn batch_predict(&self, images: &mut Vec<Mat>) -> Result<Vec<SegmentationResult>, FastDeployError> {
+        unsafe {
+            let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
+            let mut segmentation_results = OneDimSegmentationResult::new();
+            let ret = FD_C_PaddleSegModelWrapperBatchPredict(self.ptr, one_dim_image,
+                                                             segmentation_results.ptr.as_mut());
+            if !fd_c_bool_to_bool(ret) {
+                return Err(FastDeployError::PredictError);
+            }
+            let mut result = Vec::with_capacity(images.len());
+            for i in 0..segmentation_results.ptr.size {
+                result.push(SegmentationResult::from(*segmentation_results.ptr.data.wrapping_add(i)));
+            }
+            return Ok(result);
+        }
+    }
+}
+
+impl Drop for PaddleSegModel {
+    fn drop(&mut self) {
+        unsafe {
+            FD_C_DestroyPaddleSegModelWrapper(self.ptr);
+        }
+    }
+}
+
 
 
 

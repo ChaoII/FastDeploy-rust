@@ -5,22 +5,33 @@ use std::str::Utf8Error;
 use fastdeploy_bind::*;
 
 pub mod common {
+    use std::ffi::{CStr, CString};
     use std::slice;
 
-    use fastdeploy_bind::{FD_C_Bool,
-                          FD_C_OneDimArrayFloat,
-                          FD_C_OneDimArrayInt32,
-                          FD_C_OneDimArrayInt64,
-                          FD_C_OneDimArrayUint8,
-                          FD_C_TwoDimArrayFloat};
+    use fastdeploy_bind::{FD_C_Bool, FD_C_Cstr, FD_C_OneDimArrayCstr, FD_C_OneDimArrayFloat, FD_C_OneDimArrayInt32, FD_C_OneDimArrayInt64, FD_C_OneDimArrayUint8, FD_C_TwoDimArrayFloat, FD_C_TwoDimArrayInt32};
 
     #[inline]
     pub fn fd_c_bool_to_bool(ret: FD_C_Bool) -> bool {
         ret >= 1
     }
 
+    pub fn fd_c_cstr_to_string(str: FD_C_Cstr) -> String {
+        unsafe {
+            CStr::from_ptr(str.data).to_str().unwrap().to_string()
+        }
+    }
 
-    pub fn fd_c_one_dim_array_float_to_vec_float(array: FD_C_OneDimArrayFloat) -> Vec<f32> {
+    pub fn fd_one_dim_array_c_str_to_vec_string(array: FD_C_OneDimArrayCstr) -> Vec<String> {
+        unsafe {
+            let mut result = Vec::with_capacity(array.size);
+            for i in 0..array.size {
+                result.push(CStr::from_ptr((*array.data.wrapping_add(i)).data).to_str().unwrap().to_string());
+            };
+            return result;
+        }
+    }
+
+    pub fn fd_c_one_dim_array_float_to_vec_f32(array: FD_C_OneDimArrayFloat) -> Vec<f32> {
         if array.data.is_null() {
             return vec![];
         }
@@ -62,9 +73,116 @@ pub mod common {
             let mut result = vec![];
             for i in 0..array.size {
                 let ptr = array.data.wrapping_add(i);
-                result.push(fd_c_one_dim_array_float_to_vec_float(*ptr))
+                result.push(fd_c_one_dim_array_float_to_vec_f32(*ptr))
             }
             return result;
+        }
+    }
+
+    pub fn fd_c_two_dim_array_int32_to_vec_i32(array: FD_C_TwoDimArrayInt32) -> Vec<Vec<i32>> {
+        unsafe {
+            let mut result = vec![];
+            for i in 0..array.size {
+                let ptr = array.data.wrapping_add(i);
+                result.push(fd_c_one_dim_array_int32_to_vec_i32(*ptr))
+            }
+            return result;
+        }
+    }
+
+    //--------------------------------------------------------------------------------------------
+
+    #[inline]
+    pub fn bool_to_fd_c_bool(ret: bool) -> FD_C_Bool {
+        return if ret { 1 } else { 0 };
+    }
+
+    pub fn string_to_fd_c_cstr(str: String) -> FD_C_Cstr {
+        unsafe {
+            FD_C_Cstr {
+                size: str.len(),
+                data: CString::new(str).unwrap().into_raw(),
+            }
+        }
+    }
+
+    pub fn vec_string_to_fd_one_dim_array_c_str(array: Vec<String>) -> FD_C_OneDimArrayCstr {
+        unsafe {
+            let mut result = Vec::with_capacity(array.len());
+            for i in 0..array.len() {
+                result.push(string_to_fd_c_cstr(array[i].clone()));
+            }
+            return FD_C_OneDimArrayCstr {
+                size: array.len(),
+                data: result.as_mut_ptr(),
+            };
+        }
+    }
+
+    pub fn vec_f32_to_fd_c_one_dim_array_float(array: Vec<f32>) -> FD_C_OneDimArrayFloat {
+        let mut s = array.clone();
+        unsafe {
+            FD_C_OneDimArrayFloat {
+                size: array.len(),
+                data: s.as_mut_ptr(),
+            }
+        }
+    }
+
+    pub fn vec_i32_to_fd_c_one_dim_array_int32(array: Vec<i32>) -> FD_C_OneDimArrayInt32 {
+        let mut s = array.clone();
+        unsafe {
+            FD_C_OneDimArrayInt32 {
+                size: array.len(),
+                data: s.as_mut_ptr(),
+            }
+        }
+    }
+
+    pub fn vec_i64_to_fd_c_one_dim_array_int64(array: Vec<i64>) -> FD_C_OneDimArrayInt64 {
+        let mut s = array.clone();
+        unsafe {
+            FD_C_OneDimArrayInt64 {
+                size: array.len(),
+                data: s.as_mut_ptr(),
+            }
+        }
+    }
+
+    pub fn vec_u8_to_fd_c_one_dim_array_uint8(array: Vec<u8>) -> FD_C_OneDimArrayUint8 {
+        let mut s = array.clone();
+        unsafe {
+            FD_C_OneDimArrayUint8 {
+                size: array.len(),
+                data: s.as_mut_ptr(),
+            }
+        }
+    }
+
+    pub fn vec_f32_to_fd_c_two_dim_array_float(array: Vec<Vec<f32>>) -> FD_C_TwoDimArrayFloat {
+        unsafe {
+            let mut result = Vec::with_capacity(array.len());
+            for i in 0..array.len() {
+                result.push(vec_f32_to_fd_c_one_dim_array_float(array[i].clone()));
+            }
+            return FD_C_TwoDimArrayFloat {
+                size: array.len(),
+                data: result.as_mut_ptr(),
+            };
+        }
+    }
+
+
+    pub fn vec_i32_to_fd_c_two_dim_array_int32(array: Vec<Vec<i32>>) -> FD_C_TwoDimArrayInt32 {
+        unsafe {
+            let mut result = Vec::with_capacity(array.len());
+            for i in 0..array.len() {
+                result.push(vec_i32_to_fd_c_one_dim_array_int32(array[i].clone()));
+            }
+            return FD_C_TwoDimArrayInt32 {
+                size: array.len(),
+                data: result.as_mut_ptr(),
+            };
         }
     }
 }
@@ -129,6 +247,25 @@ impl OneDimArrayInt32Wrapper {
     }
 }
 
+impl From<Vec<i32>> for OneDimArrayInt32Wrapper {
+    fn from(mut value: Vec<i32>) -> Self {
+        Self {
+            ptr: Box::new(FD_C_OneDimArrayInt32 {
+                size: value.len(),
+                data: value.as_mut_ptr(),
+            })
+        }
+    }
+}
+
+impl From<FD_C_OneDimArrayInt32> for OneDimArrayInt32Wrapper {
+    fn from(mut value: FD_C_OneDimArrayInt32) -> Self {
+        Self {
+            ptr: Box::new(value)
+        }
+    }
+}
+
 impl Default for OneDimArrayInt32Wrapper {
     fn default() -> Self {
         Self { ptr: Box::new(FD_C_OneDimArrayInt32 { size: 0, data: std::ptr::null_mut() }) }
@@ -177,8 +314,10 @@ impl OneDimArraySizeWrapper {
             ptr: &mut FD_C_OneDimArraySize { size: array.len(), data: array.as_mut_ptr() }
         }
     }
-    pub unsafe fn to_vec(&self) -> Vec<usize> {
-        return Vec::from_raw_parts((*self.ptr).data, (*self.ptr).size, (*self.ptr).size);
+    pub fn to_vec(&self) -> Vec<usize> {
+        unsafe {
+            return Vec::from_raw_parts((*self.ptr).data, (*self.ptr).size, (*self.ptr).size);
+        }
     }
 }
 
@@ -203,6 +342,15 @@ impl OneDimArrayFloatWrapper {
     }
 }
 
+impl From<FD_C_OneDimArrayFloat> for OneDimArrayFloatWrapper {
+    fn from(value: FD_C_OneDimArrayFloat) -> Self {
+        Self {
+            ptr: Box::new(value)
+        }
+    }
+}
+
+
 impl Default for OneDimArrayFloatWrapper {
     fn default() -> Self {
         Self {
@@ -220,33 +368,44 @@ impl Drop for OneDimArrayFloatWrapper {
 }
 
 pub struct TwoDimArrayInt8Wrapper {
-    ptr: *mut FD_C_TwoDimArrayInt8,
+    ptr: Box<FD_C_TwoDimArrayInt8>,
 }
 
 impl TwoDimArrayInt8Wrapper {
-    pub unsafe fn build(vec: &mut Vec<Vec<i8>>) -> TwoDimArrayInt8Wrapper {
-        let mut data_raw_ptrs = vec![std::ptr::null_mut(); vec.len()];
-        for i in 0..vec.len() {
-            data_raw_ptrs[i] = OneDimArrayInt8Wrapper::build(&mut vec[i]).ptr
-        }
-        TwoDimArrayInt8Wrapper {
-            ptr: &mut FD_C_TwoDimArrayInt8 { size: vec.len(), data: *data_raw_ptrs.as_mut_ptr() },
+    pub unsafe fn to_vec(&self) -> Vec<Vec<i8>> {
+        unsafe {
+            let mut vec = Vec::with_capacity(self.ptr.size);
+            for i in 0..self.ptr.size {
+                let temp = *self.ptr.data.wrapping_add(i);
+                vec.push(slice::from_raw_parts(temp.data, temp.size).to_vec());
+            }
+            return vec;
         }
     }
-    pub unsafe fn to_vec(&self) -> Vec<Vec<i8>> {
-        let mut vec = Vec::with_capacity((*self.ptr).size);
-        for i in 0..(*self.ptr).size {
-            let temp = (*(*self.ptr).data.wrapping_add(i));
-            vec.push(Vec::from_raw_parts(temp.data, temp.size, temp.size));
+}
+
+impl From<Vec<Vec<i8>>> for TwoDimArrayInt8Wrapper {
+    fn from(value: Vec<Vec<i8>>) -> Self {
+        let mut ret = Vec::with_capacity(value.len());
+        for mut vec in value {
+            ret.push(FD_C_OneDimArrayInt8 {
+                size: vec.len(),
+                data: vec.as_mut_ptr(),
+            })
+        };
+        Self {
+            ptr: Box::new(FD_C_TwoDimArrayInt8 {
+                size: ret.len(),
+                data: ret.as_mut_ptr(),
+            })
         }
-        return vec;
     }
 }
 
 impl Drop for TwoDimArrayInt8Wrapper {
     fn drop(&mut self) {
         unsafe {
-            FD_C_DestroyTwoDimArrayInt8(self.ptr)
+            FD_C_DestroyTwoDimArrayInt8(self.ptr.as_mut())
         }
     }
 }
@@ -256,22 +415,45 @@ pub struct TwoDimArrayInt32Wrapper {
 }
 
 impl TwoDimArrayInt32Wrapper {
-    pub unsafe fn build(vec: &mut Vec<Vec<i32>>) -> TwoDimArrayInt32Wrapper {
-        let mut data_raw_ptrs = vec![std::ptr::null_mut(); vec.len()];
-        for i in 0..vec.len() {
-            data_raw_ptrs[i] = OneDimArrayInt32Wrapper::build(&mut vec[i]).ptr
-        }
-        TwoDimArrayInt32Wrapper {
-            ptr: Box::new(FD_C_TwoDimArrayInt32 { size: vec.len(), data: *data_raw_ptrs.as_mut_ptr() }),
+    pub fn to_vec(&self) -> Vec<Vec<i32>> {
+        unsafe {
+            let mut vec = Vec::with_capacity(self.ptr.size);
+            for i in 0..(*self.ptr).size {
+                let temp = (*(*self.ptr).data.wrapping_add(i));
+                vec.push(slice::from_raw_parts(temp.data, temp.size).to_vec());
+            }
+            return vec;
         }
     }
-    pub unsafe fn to_vec(&self) -> Vec<Vec<i32>> {
-        let mut vec = Vec::with_capacity(self.ptr.size);
-        for i in 0..(*self.ptr).size {
-            let temp = (*(*self.ptr).data.wrapping_add(i));
-            vec.push(slice::from_raw_parts(temp.data, temp.size).to_vec());
+}
+
+impl From<Vec<Vec<i32>>> for TwoDimArrayInt32Wrapper {
+    fn from(value: Vec<Vec<i32>>) -> Self {
+        unsafe {
+            let mut rets = Vec::with_capacity(value.len());
+            for mut vec in value {
+                rets.push(FD_C_OneDimArrayInt32 {
+                    size: vec.len(),
+                    data: vec.as_mut_ptr(),
+                });
+            }
+            Self {
+                ptr: Box::new(FD_C_TwoDimArrayInt32 {
+                    size: rets.len(),
+                    data: rets.as_mut_ptr(),
+                })
+            }
         }
-        return vec;
+    }
+}
+
+impl From<FD_C_TwoDimArrayInt32> for TwoDimArrayInt32Wrapper {
+    fn from(value: FD_C_TwoDimArrayInt32) -> Self {
+        unsafe {
+            Self {
+                ptr: Box::new(value),
+            }
+        }
     }
 }
 
@@ -291,66 +473,95 @@ impl Drop for TwoDimArrayInt32Wrapper {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct TwoDimArrayFloatWrapper {
-    pub ptr: *mut FD_C_TwoDimArrayFloat,
+    pub ptr: Box<FD_C_TwoDimArrayFloat>,
 }
 
-// impl TwoDimArrayFloatWrapper {
-//     pub unsafe fn build(vec: &mut Vec<Vec<f32>>) -> TwoDimArrayFloatWrapper {
-//         let mut data_raw_ptrs = vec![std::ptr::null_mut(); vec.len()];
-//         for i in 0..vec.len() {
-//             data_raw_ptrs[i] = OneDimArrayFloatWrapper::build(&mut vec[i]).ptr
-//         }
-//         TwoDimArrayFloatWrapper {
-//             ptr: &mut FD_C_TwoDimArrayFloat { size: vec.len(), data: *data_raw_ptrs.as_mut_ptr() },
-//         }
-//     }
-//     pub unsafe fn to_vec(&self) -> Vec<Vec<f32>> {
-//         let mut vec = Vec::with_capacity((*self.ptr).size);
-//         for i in 0..(*self.ptr).size {
-//             let temp = (*(*self.ptr).data.wrapping_add(i));
-//             vec.push(Vec::from_raw_parts(temp.data, temp.size, temp.size));
-//         }
-//         return vec;
-//     }
-// }
-//
-// impl Drop for TwoDimArrayFloatWrapper {
-//     fn drop(&mut self) {
-//         unsafe {
-//             FD_C_DestroyTwoDimArrayFloat(self.ptr)
-//         }
-//     }
-// }
+impl TwoDimArrayFloatWrapper {
+    pub fn to_vec(&self) -> Vec<Vec<f32>> {
+        unsafe {
+            let mut vec = Vec::with_capacity(self.ptr.size);
+            for i in 0..self.ptr.size {
+                let temp = *self.ptr.data.wrapping_add(i);
+                vec.push(slice::from_raw_parts(temp.data, temp.size).to_vec());
+            }
+            return vec;
+        }
+    }
+}
+
+impl From<Vec<Vec<f32>>> for TwoDimArrayFloatWrapper {
+    fn from(value: Vec<Vec<f32>>) -> Self {
+        let mut ret = Vec::with_capacity(value.len());
+        for mut vec in value {
+            ret.push(FD_C_OneDimArrayFloat {
+                size: vec.len(),
+                data: vec.as_mut_ptr(),
+            })
+        };
+        Self {
+            ptr: Box::new(FD_C_TwoDimArrayFloat {
+                size: ret.len(),
+                data: ret.as_mut_ptr(),
+            })
+        }
+    }
+}
+
+impl From<FD_C_TwoDimArrayFloat> for TwoDimArrayFloatWrapper {
+    fn from(value: FD_C_TwoDimArrayFloat) -> Self {
+        Self {
+            ptr: Box::new(value)
+        }
+    }
+}
+
+impl Drop for TwoDimArrayFloatWrapper {
+    fn drop(&mut self) {
+        unsafe {
+            FD_C_DestroyTwoDimArrayFloat(self.ptr.as_mut())
+        }
+    }
+}
 
 pub struct TwoDimArraySizeWrapper {
-    ptr: *mut FD_C_TwoDimArraySize,
+    pub ptr: Box<FD_C_TwoDimArraySize>,
 }
 
 impl TwoDimArraySizeWrapper {
-    pub unsafe fn build(vec: &mut Vec<Vec<usize>>) -> TwoDimArraySizeWrapper {
-        let mut data_raw_ptrs = vec![std::ptr::null_mut(); vec.len()];
-        for i in 0..vec.len() {
-            data_raw_ptrs[i] = OneDimArraySizeWrapper::build(&mut vec[i]).ptr
-        }
-        TwoDimArraySizeWrapper {
-            ptr: &mut FD_C_TwoDimArraySize { size: vec.len(), data: *data_raw_ptrs.as_mut_ptr() },
-        }
-    }
     pub unsafe fn to_vec(&self) -> Vec<Vec<usize>> {
-        let mut vec = Vec::with_capacity((*self.ptr).size);
-        for i in 0..(*self.ptr).size {
-            let temp = (*(*self.ptr).data.wrapping_add(i));
-            vec.push(Vec::from_raw_parts(temp.data, temp.size, temp.size));
+        let mut vec = Vec::with_capacity(self.ptr.size);
+        for i in 0..self.ptr.size {
+            let temp = *self.ptr.data.wrapping_add(i);
+            vec.push(slice::from_raw_parts(temp.data, temp.size).to_vec());
         }
         return vec;
+    }
+}
+
+impl From<Vec<Vec<usize>>> for TwoDimArraySizeWrapper {
+    fn from(value: Vec<Vec<usize>>) -> Self {
+        let mut ret = Vec::with_capacity(value.len());
+        for mut vec in value {
+            ret.push(FD_C_OneDimArraySize {
+                size: vec.len(),
+                data: vec.as_mut_ptr(),
+            })
+        };
+        Self {
+            ptr: Box::new(FD_C_TwoDimArraySize {
+                size: ret.len(),
+                data: ret.as_mut_ptr(),
+            })
+        }
     }
 }
 
 impl Drop for TwoDimArraySizeWrapper {
     fn drop(&mut self) {
         unsafe {
-            FD_C_DestroyTwoDimArraySize(self.ptr)
+            FD_C_DestroyTwoDimArraySize(self.ptr.as_mut())
         }
     }
 }
@@ -360,30 +571,35 @@ pub struct ThreeDimArrayInt32Wrapper {
 }
 
 impl ThreeDimArrayInt32Wrapper {
-    pub unsafe fn build(vec: &mut Vec<Vec<Vec<i32>>>) -> ThreeDimArrayInt32Wrapper {
-        let mut data_raw_ptrs = vec![std::ptr::null_mut(); vec.len()];
-        for i in 0..vec.len() {
-            data_raw_ptrs[i] = TwoDimArrayInt32Wrapper::build(&mut vec[i]).ptr.as_mut()
-        }
-        ThreeDimArrayInt32Wrapper {
-            ptr: Box::new(FD_C_ThreeDimArrayInt32 { size: vec.len(), data: *data_raw_ptrs.as_mut_ptr() }),
-        }
-    }
     pub fn to_vec(&self) -> Vec<Vec<Vec<i32>>> {
         let mut vec = Vec::with_capacity(self.ptr.size);
-        for i in 0..self.ptr.size {
-            let p = self.ptr.data.wrapping_add(i);
-            unsafe {
-                let mut vec_ = Vec::with_capacity((*p).size);
-                for j in 0..(*p).size {
-                    let temp = (*(*p).data.wrapping_add(i));
+        unsafe {
+            for i in 0..self.ptr.size {
+                let p = self.ptr.data.wrapping_add(i);
+                let s = TwoDimArrayInt32Wrapper {
+                    ptr: Box::new(*p),
+                };
+                vec.push(s.to_vec())
+            }
+            return vec;
+        }
+    }
+}
 
-                    vec_.push(slice::from_raw_parts(temp.data, temp.size).to_vec());
-                }
-                vec.push(vec_);
+impl From<Vec<Vec<Vec<i32>>>> for ThreeDimArrayInt32Wrapper {
+    fn from(value: Vec<Vec<Vec<i32>>>) -> Self {
+        let mut ret = Vec::with_capacity(value.len());
+        for vec in value {
+            ret.push(*TwoDimArrayInt32Wrapper::from(vec).ptr);
+        }
+        unsafe {
+            Self {
+                ptr: Box::new(FD_C_ThreeDimArrayInt32 {
+                    size: ret.len(),
+                    data: ret.as_mut_ptr(),
+                })
             }
         }
-        return vec;
     }
 }
 
@@ -426,33 +642,56 @@ impl Mat {
 
 impl Drop for Mat {
     fn drop(&mut self) {
+        println!("drop single");
         unsafe {
             FD_C_DestroyMat(self.ptr)
         }
     }
 }
 
-pub struct OneDimMat {
-    pub ptr: *mut FD_C_OneDimMat,
+pub struct OneDimMatWrapper {
+    pub ptr: Box<FD_C_OneDimMat>,
 }
 
-impl OneDimMat {
-    pub fn new() -> OneDimMat {
-        OneDimMat {
-            ptr: &mut FD_C_OneDimMat { size: 0, data: std::ptr::null_mut() },
+impl OneDimMatWrapper {
+    pub fn new() -> OneDimMatWrapper {
+        OneDimMatWrapper {
+            ptr: Box::new(FD_C_OneDimMat { size: 0, data: std::ptr::null_mut() }),
         }
+    }
+    pub fn to_vec(self) -> Vec<Mat> {
+        let mut ret = Vec::with_capacity(self.ptr.size);
+
+        for i in 0..self.ptr.size {
+            unsafe {
+                ret.push(Mat { ptr: *self.ptr.data.wrapping_add(i) })
+            }
+        };
+        return ret;
     }
 }
 
-impl Drop for OneDimMat {
-    fn drop(&mut self) {
-        println!("start drop onedimmat");
+impl From<&mut Vec<Mat>> for OneDimMatWrapper {
+    fn from(mut value: &mut Vec<Mat>) -> Self {
         unsafe {
-            FD_C_DestroyOneDimMat(self.ptr)
+            let s = FD_C_OneDimMat { size: value.len(), data: &mut (*value.as_mut_ptr()).ptr };
+            Self {
+                ptr: Box::new(s)
+            }
         }
-        println!("end drop onedimmat");
     }
 }
+
+
+// impl Drop for OneDimMatWrapper {
+//     fn drop(&mut self) {
+//         println!("start drop onedimmat");
+//         unsafe {
+//             FD_C_DestroyOneDimMat(self.ptr.as_mut())
+//         }
+//         println!("end drop onedimmat");
+//     }
+// }
 
 pub struct Mask {
     pub ptr: *mut FD_C_Mask,
@@ -472,6 +711,14 @@ pub struct CstrWrapper {
 }
 
 impl CstrWrapper {
+    pub fn new(value: String) -> Self {
+        Self {
+            ptr: Box::new(FD_C_Cstr {
+                size: value.len(),
+                data: CString::new(value).unwrap().into_raw(),
+            }),
+        }
+    }
     pub fn to_str(mut self) -> Result<&'static str, Utf8Error> {
         unsafe {
             CStr::from_ptr(self.ptr.data as *const c_char).to_str()
@@ -501,6 +748,16 @@ impl From<&str> for CstrWrapper {
     }
 }
 
+impl From<FD_C_Cstr> for CstrWrapper {
+    fn from(data: FD_C_Cstr) -> Self {
+        unsafe {
+            Self {
+                ptr: Box::new(data)
+            }
+        }
+    }
+}
+
 impl Drop for CstrWrapper {
     fn drop(&mut self) {
         unsafe {
@@ -514,13 +771,34 @@ pub struct OneDimArrayCstrWrapper {
 }
 
 impl OneDimArrayCstrWrapper {
-    pub fn to_vec(mut self) -> Vec<&'static str> {
+    pub fn new(value: Vec<String>) -> Self {
+        let mut result = Vec::with_capacity(value.len());
+        for vec in &value {
+            result.push(*CstrWrapper::new(vec.to_string()).ptr);
+        }
+
+        Self {
+            ptr: Box::new(FD_C_OneDimArrayCstr {
+                size: value.len(),
+                data: result.as_mut_ptr(),
+            }),
+        }
+    }
+    pub fn to_vec(mut self) -> Vec<String> {
         unsafe {
             let mut result = Vec::with_capacity(self.ptr.size);
             for i in 0..self.ptr.size {
-                result.push(CStr::from_ptr((*self.ptr.data.wrapping_add(i)).data).to_str().unwrap())
+                result.push(CStr::from_ptr((*self.ptr.data.wrapping_add(i)).data).to_str().unwrap().to_string())
             };
             return result;
+        }
+    }
+}
+
+impl From<FD_C_OneDimArrayCstr> for OneDimArrayCstrWrapper {
+    fn from(value: FD_C_OneDimArrayCstr) -> Self {
+        Self {
+            ptr: Box::new(value)
         }
     }
 }
