@@ -29,7 +29,7 @@ impl ClassifyResult {
         FD_C_ClassifyResult {
             label_ids: vec_i32_to_fd_c_one_dim_array_int32(self.label_ids.clone()),
             scores: vec_f32_to_fd_c_one_dim_array_float(self.scores.clone()),
-            type_: self.type_.clone().to_c_type(),
+            type_: self.type_ as FD_C_ResultType,
         }
     }
 }
@@ -40,7 +40,7 @@ impl From<FD_C_ClassifyResult> for ClassifyResult {
             Self {
                 label_ids: fd_c_one_dim_array_int32_to_vec_i32(value.label_ids),
                 scores: fd_c_one_dim_array_float_to_vec_f32(value.scores),
-                type_: ResultType::from_c_type(value.type_),
+                type_: ResultType::from(value.type_),
             }
         }
     }
@@ -62,7 +62,7 @@ impl From<FD_C_SegmentationResult> for SegmentationResult {
             score_map: fd_c_one_dim_array_float_to_vec_f32(value.score_map),
             shape: fd_c_one_dim_array_int64_to_vec_i64(value.shape),
             contain_score_map: fd_c_bool_to_bool(value.contain_score_map),
-            type_: ResultType::from_c_type(value.type_),
+            type_: ResultType::from(value.type_),
         }
     }
 }
@@ -152,10 +152,9 @@ impl OneDimDetectResultWrapper {
 }
 
 impl Drop for OneDimDetectResultWrapper {
+    #[inline]
     fn drop(&mut self) {
-        unsafe {
-            FD_C_DestroyOneDimDetectionResult(self.ptr);
-        }
+        unsafe { FD_C_DestroyOneDimDetectionResult(self.ptr); }
     }
 }
 
@@ -172,7 +171,7 @@ impl Mask {
         FD_C_Mask {
             data: vec_u8_to_fd_c_one_dim_array_uint8(self.data),
             shape: vec_i64_to_fd_c_one_dim_array_int64(self.shape),
-            type_: ResultType::to_c_type(self.type_),
+            type_: self.type_ as FD_C_ResultType,
         }
     }
 }
@@ -192,7 +191,7 @@ impl From<FD_C_Mask> for Mask {
         Self {
             data: fd_c_one_dim_array_uint8_to_vec_u8(value.data),
             shape: fd_c_one_dim_array_int64_to_vec_i64(value.shape),
-            type_: ResultType::from_c_type(value.type_),
+            type_: ResultType::from(value.type_),
         }
     }
 }
@@ -244,7 +243,7 @@ impl DetectionResult {
             label_ids: vec_i32_to_fd_c_one_dim_array_int32(self.label_ids.clone()),
             masks: vec_mask_to_fd_c_two_dim_mask(self.masks.clone()),
             contain_masks: bool_to_fd_c_bool(self.contain_masks.clone()),
-            type_: ResultType::to_c_type(self.type_.clone()),
+            type_: self.type_ as FD_C_ResultType,
         }
     }
 }
@@ -258,7 +257,7 @@ impl From<FD_C_DetectionResult> for DetectionResult {
             label_ids: fd_c_one_dim_array_int32_to_vec_i32(value.label_ids),
             masks: fd_c_two_dim_mask_to_vec_mask(value.masks),
             contain_masks: fd_c_bool_to_bool(value.contain_masks),
-            type_: ResultType::from_c_type(value.type_),
+            type_: ResultType::from(value.type_),
         }
     }
 }
@@ -307,7 +306,7 @@ pub struct OCRResult {
 }
 
 impl From<FD_C_OCRResult> for OCRResult {
-    fn from(value: FD_C_OCRResult) -> Self {
+    fn from(mut value: FD_C_OCRResult) -> Self {
         Self {
             boxes: fd_c_two_dim_array_int32_to_vec_i32(value.boxes),
             text: fd_one_dim_array_c_str_to_vec_string(value.text),
@@ -317,7 +316,7 @@ impl From<FD_C_OCRResult> for OCRResult {
             table_boxes: fd_c_two_dim_array_int32_to_vec_i32(value.table_boxes),
             table_structure: fd_one_dim_array_c_str_to_vec_string(value.table_structure),
             table_html: CstrWrapper::from(value.table_html).to_str().unwrap().to_string(),
-            type_: ResultType::from_c_type(value.type_),
+            type_: ResultType::from(value.type_),
         }
     }
 }
@@ -341,22 +340,28 @@ impl Drop for OcrResultWrapper {
     fn drop(&mut self) {
         println!("delete ocr result");
         unsafe {
-            FD_C_DestroyOCRResult(self.ptr);
+            // FD_C_DestroyOCRResult(self.ptr);
         }
     }
 }
 
 pub struct OneDimOcrResultWrapper {
-    pub ptr: Box<FD_C_OneDimOCRResult>,
+    pub ptr: *mut FD_C_OneDimOCRResult,
 }
 
-impl OneDimOcrResultWrapper {}
+impl OneDimOcrResultWrapper {
+    pub fn new() -> Self {
+        Self {
+            ptr: Self::default().ptr,
+        }
+    }
+}
 
 impl Default for OneDimOcrResultWrapper {
     fn default() -> Self {
         unsafe {
             Self {
-                ptr: Box::new(FD_C_OneDimOCRResult { size: 0, data: OcrResultWrapper::new().ptr }),
+                ptr: FD_C_CreateOneDimOCRResult(),
             }
         }
     }
@@ -364,7 +369,9 @@ impl Default for OneDimOcrResultWrapper {
 
 impl Drop for OneDimOcrResultWrapper {
     fn drop(&mut self) {
-        // FD_C_DestroyOneDimOcrResult(self.ptr.as_mut());
+        unsafe {
+            FD_C_DestroyOneDimOCRResult(self.ptr);
+        }
     }
 }
 

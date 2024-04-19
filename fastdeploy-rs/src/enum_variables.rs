@@ -4,6 +4,9 @@
 
 use fastdeploy_bind::*;
 
+#[cfg_attr(any(not(windows), target_env = "gnu"), repr(u32))] // include windows-gnu
+#[cfg_attr(all(windows, not(target_env = "gnu")), repr(i32))] // msvc being *special* again
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum ModelFormat {
     AUTOREC,
     PADDLE,
@@ -88,43 +91,30 @@ impl LitePowerMode {
     }
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(any(not(windows), target_env = "gnu"), repr(u32))] // include windows-gnu
+#[cfg_attr(all(windows, not(target_env = "gnu")), repr(i32))] // msvc being *special* again
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum ResultType {
-    UNKNOWN_RESULT,
-    CLASSIFY,
-    DETECTION,
-    SEGMENTATION,
-    OCR,
-    MOT,
-    FACE_DETECTION,
-    FACE_ALIGNMENT,
-    FACE_RECOGNITION,
-    MATTING,
-    MASK,
-    KEYPOINT_DETECTION,
-    HEADPOSE,
+    UNKNOWN_RESULT = FD_C_ModelFormat_UNKNOWN_RESULT,
+    CLASSIFY = FD_C_ModelFormat_CLASSIFY,
+    DETECTION = FD_C_ModelFormat_DETECTION,
+    SEGMENTATION = FD_C_ModelFormat_SEGMENTATION,
+    OCR = FD_C_ModelFormat_OCR,
+    MOT = FD_C_ModelFormat_MOT,
+    FACE_DETECTION = FD_C_ModelFormat_FACE_DETECTION,
+    FACE_ALIGNMENT = FD_C_ModelFormat_FACE_ALIGNMENT,
+    FACE_RECOGNITION = FD_C_ModelFormat_FACE_RECOGNITION,
+    MATTING = FD_C_ModelFormat_MATTING,
+    MASK = FD_C_ModelFormat_MASK,
+    KEYPOINT_DETECTION = FD_C_ModelFormat_KEYPOINT_DETECTION,
+    HEADPOSE = FD_C_ModelFormat_HEADPOSE,
 }
 
-impl ResultType {
-    pub fn to_c_type(self) -> i32 {
-        match self {
-            ResultType::UNKNOWN_RESULT => FD_C_ModelFormat_UNKNOWN_RESULT,
-            ResultType::CLASSIFY => FD_C_ModelFormat_CLASSIFY,
-            ResultType::DETECTION => FD_C_ModelFormat_DETECTION,
-            ResultType::SEGMENTATION => FD_C_ModelFormat_SEGMENTATION,
-            ResultType::OCR => FD_C_ModelFormat_OCR,
-            ResultType::MOT => FD_C_ModelFormat_MOT,
-            ResultType::FACE_DETECTION => FD_C_ModelFormat_FACE_DETECTION,
-            ResultType::FACE_ALIGNMENT => FD_C_ModelFormat_FACE_ALIGNMENT,
-            ResultType::FACE_RECOGNITION => FD_C_ModelFormat_FACE_RECOGNITION,
-            ResultType::MATTING => FD_C_ModelFormat_MATTING,
-            ResultType::MASK => FD_C_ModelFormat_MASK,
-            ResultType::KEYPOINT_DETECTION => FD_C_ModelFormat_KEYPOINT_DETECTION,
-            ResultType::HEADPOSE => FD_C_ModelFormat_HEADPOSE,
-        }
-    }
-    pub fn from_c_type(type_: i32) -> ResultType {
-        match type_ {
+impl ResultType {}
+
+impl From<FD_C_ResultType> for ResultType {
+    fn from(value: FD_C_ResultType) -> Self {
+        match value {
             FD_C_ModelFormat_UNKNOWN_RESULT => ResultType::UNKNOWN_RESULT,
             FD_C_ModelFormat_CLASSIFY => ResultType::CLASSIFY,
             FD_C_ModelFormat_DETECTION => ResultType::DETECTION,

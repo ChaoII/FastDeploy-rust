@@ -34,6 +34,7 @@ pub fn test_detection() {
     let img2 = Mat::imread("demo/detection1.jpg");
     let images = &mut vec![img1, img2];
     let result = model.batch_predict(images);
+    // let result = model.predict(&img1);
     println!("detection result:{:?}", result);
     // let s = &vis_detection(img, result, 0.45, 2, 0.5);
     // Mat::imwrite(s, "result.jpg");
@@ -67,7 +68,7 @@ pub fn test_ppocrv3() {
 }
 
 fn main() {
-    test_ppocrv3();
-    // test_detection();
+    // test_ppocrv3();
+    test_detection();
     // test_Recognizer(true);
 }

@@ -106,7 +106,8 @@ impl PPYOLOE {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
             let one_dim_detection = OneDimDetectResultWrapper::new();
-            let ret = FD_C_PPYOLOEWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
+            let ret = FD_C_PPYOLOEWrapperBatchPredict(self.ptr, one_dim_image,
+                                                      one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
@@ -139,7 +140,8 @@ pub struct PicoDet {
 }
 
 impl PicoDet {
-    pub fn new(model_file: &str, param_file: &str, config_file: &str, runtime_option: &RuntimeOption, model_format: ModelFormat) -> Self {
+    pub fn new(model_file: &str, param_file: &str, config_file: &str, runtime_option: &RuntimeOption,
+               model_format: ModelFormat) -> Self {
         unsafe {
             return PicoDet {
                 ptr: FD_C_CreatePicoDetWrapper(CString::new(model_file).unwrap().into_raw(),
@@ -1714,7 +1716,7 @@ impl Classifier {
             let mut cls_scores = OneDimArrayFloatWrapper::default();
             let ret = FD_C_ClassifierWrapperBatchPredictWithIndex(self.ptr,
                                                                   one_dim_image,
-                                                                  cls_labels.ptr.as_mut(),
+                                                                  cls_labels.ptr,
                                                                   cls_scores.ptr.as_mut(),
                                                                   start_index, end_index);
             if !fd_c_bool_to_bool(ret) {
@@ -1761,7 +1763,7 @@ impl DBDetector {
     pub fn predict(&self, image: Mat) -> Result<Vec<Vec<i32>>, FastDeployError> {
         unsafe {
             let mut box_result = TwoDimArrayInt32Wrapper::default();
-            let ret = FD_C_DBDetectorWrapperPredict(self.ptr, image.ptr, box_result.ptr.as_mut());
+            let ret = FD_C_DBDetectorWrapperPredict(self.ptr, image.ptr, box_result.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
@@ -1774,7 +1776,7 @@ impl DBDetector {
             let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
             let mut det_results = ThreeDimArrayInt32Wrapper::default();
             let ret = FD_C_DBDetectorWrapperBatchPredict(self.ptr, one_dim_image,
-                                                         det_results.ptr.as_mut());
+                                                         det_results.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
@@ -1821,7 +1823,7 @@ impl StructureV2Table {
             let mut boxes_result = TwoDimArrayInt32Wrapper::default();
             let mut structure_result = OneDimArrayCstrWrapper::default();
             let ret = FD_C_StructureV2TableWrapperPredict(self.ptr, image.ptr,
-                                                          boxes_result.ptr.as_mut(),
+                                                          boxes_result.ptr,
                                                           structure_result.ptr.as_mut());
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -1836,7 +1838,7 @@ impl StructureV2Table {
             let mut boxes_results = ThreeDimArrayInt32Wrapper::default();
             let mut structure_results = TwoDimArrayCstrWrapper::default();
             let ret = FD_C_StructureV2TableWrapperBatchPredict(self.ptr, one_dim_image,
-                                                               boxes_results.ptr.as_mut(),
+                                                               boxes_results.ptr,
                                                                structure_results.ptr.as_mut());
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -1888,13 +1890,13 @@ impl PPOCRv2 {
             let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
             let mut ocr_results = OneDimOcrResultWrapper::default();
             let ret = FD_C_PPOCRv2WrapperBatchPredict(self.ptr, one_dim_image,
-                                                      ocr_results.ptr.as_mut());
+                                                      ocr_results.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
             let mut result = Vec::with_capacity(images.len());
-            for i in 0..ocr_results.ptr.size {
-                result.push(OCRResult::from(*ocr_results.ptr.data.wrapping_add(i)));
+            for i in 0..(*ocr_results.ptr).size {
+                result.push(OCRResult::from(*(*ocr_results.ptr).data.wrapping_add(i)));
             }
             return Ok(result);
         }
@@ -1943,13 +1945,13 @@ impl PPOCRv3 {
             let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
             let mut ocr_results = OneDimOcrResultWrapper::default();
             let ret = FD_C_PPOCRv3WrapperBatchPredict(self.ptr, one_dim_image,
-                                                      ocr_results.ptr.as_mut());
+                                                      ocr_results.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
             let mut result = Vec::with_capacity(images.len());
-            for i in 0..ocr_results.ptr.size {
-                result.push(OCRResult::from(*ocr_results.ptr.data.wrapping_add(i)));
+            for i in 0..(*ocr_results.ptr).size {
+                result.push(OCRResult::from(*(*ocr_results.ptr).data.wrapping_add(i)));
             }
             return Ok(result);
         }
@@ -2004,13 +2006,13 @@ impl PPStructureV2Table {
             let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
             let mut ocr_results = OneDimOcrResultWrapper::default();
             let ret = FD_C_PPStructureV2TableWrapperBatchPredict(self.ptr, one_dim_image,
-                                                                 ocr_results.ptr.as_mut());
+                                                                 ocr_results.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
             let mut result = Vec::with_capacity(images.len());
-            for i in 0..ocr_results.ptr.size {
-                result.push(OCRResult::from(*ocr_results.ptr.data.wrapping_add(i)));
+            for i in 0..(*ocr_results.ptr).size {
+                result.push(OCRResult::from(*(*ocr_results.ptr).data.wrapping_add(i)));
             }
             return Ok(result);
         }
