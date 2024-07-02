@@ -9,9 +9,14 @@ use fastdeploy_bind::*;
 
 use crate::enum_variables::ModelFormat;
 use crate::errors::FastDeployError;
-use crate::result::{ClassifyResult, ClassifyResultWrapper, DetectionResult, DetectResultWrapper, OCRResult, OcrResultWrapper, OneDimClassifyResultWrapper, OneDimDetectResultWrapper, OneDimOcrResultWrapper, OneDimSegmentationResult, RecognizerResult, SegmentationResult, SegmentationResultWrapper};
+use crate::result::{ClassifyResult, ClassifyResultWrapper, DetectionResult, DetectResultWrapper,
+                    OCRResult, OcrResultWrapper, OneDimClassifyResultWrapper, OneDimDetectResult,
+                    OneDimOcrResultWrapper, OneDimSegmentationResult, RecognizerResult, SegmentationResult,
+                    SegmentationResultWrapper};
 use crate::runtime_option::RuntimeOption;
-use crate::type_bridge::{CstrWrapper, Mat, OneDimArrayCstrWrapper, OneDimArrayFloatWrapper, OneDimArrayInt32Wrapper, OneDimMatWrapper, ThreeDimArrayInt32Wrapper, TwoDimArrayCstrWrapper, TwoDimArrayInt32Wrapper};
+use crate::type_bridge::{CstrWrapper, Mat, OneDimArrayCstrWrapper, OneDimArrayFloatWrapper,
+                         OneDimArrayInt32Wrapper, OneDimMatWrapper, ThreeDimArrayInt32Wrapper,
+                         TwoDimArrayCstrWrapper, TwoDimArrayInt32Wrapper};
 use crate::type_bridge::common::fd_c_bool_to_bool;
 
 pub struct PaddleClasModel {
@@ -41,7 +46,7 @@ impl PaddleClasModel {
             return Ok(classify_result);
         };
     }
-    pub fn batch_predict(&mut self, images: &mut Vec<Mat>) -> Result<Vec<ClassifyResult>, FastDeployError> {
+    pub fn batch_predict(&self, images: &mut Vec<Mat>) -> Result<Vec<ClassifyResult>, FastDeployError> {
         let mut result = Vec::with_capacity(images.len());
         let c_one_dim_classify_result = OneDimClassifyResultWrapper::new();
         unsafe {
@@ -97,7 +102,7 @@ impl PPYOLOE {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -105,7 +110,7 @@ impl PPYOLOE {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_PPYOLOEWrapperBatchPredict(self.ptr, one_dim_image,
                                                       one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
@@ -167,7 +172,7 @@ impl PicoDet {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_PicoDetWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -226,7 +231,7 @@ impl PPYOLO {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_PPYOLOWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -285,7 +290,7 @@ impl YOLOv3 {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_YOLOv3WrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -344,7 +349,7 @@ impl PaddleYOLOX {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_PaddleYOLOXWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -403,7 +408,7 @@ impl FasterRCNN {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_FasterRCNNWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -462,7 +467,7 @@ impl MaskRCNN {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_MaskRCNNWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -521,7 +526,7 @@ impl SSD {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_SSDWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -580,7 +585,7 @@ impl PaddleYOLOv5 {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_PaddleYOLOv5WrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -639,7 +644,7 @@ impl PaddleYOLOv6 {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_PaddleYOLOv6WrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -698,7 +703,7 @@ impl PaddleYOLOv7 {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_PaddleYOLOv7WrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -757,7 +762,7 @@ impl PaddleYOLOv8 {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_PaddleYOLOv8WrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -817,7 +822,7 @@ impl RTMDet {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_RTMDetWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -877,7 +882,7 @@ impl CascadeRCNN {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_CascadeRCNNWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -936,7 +941,7 @@ impl PSSDet {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_PSSDetWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -995,7 +1000,7 @@ impl RetinaNet {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_RetinaNetWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -1054,7 +1059,7 @@ impl FCOS {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_FCOSWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -1114,7 +1119,7 @@ impl TTFNet {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_TTFNetWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -1173,7 +1178,7 @@ impl TOOD {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_TOODWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -1233,7 +1238,7 @@ impl GFL {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_GFLWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -1292,7 +1297,7 @@ impl YOLOv5 {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_YOLOv5WrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -1350,7 +1355,7 @@ impl YOLOv6 {
     //     unsafe {
     //         let mut result = Vec::with_capacity(imgs.len());
     //         let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-    //         let one_dim_detection = OneDimDetectResultWrapper::new();
+    //         let one_dim_detection = OneDimDetectResult::new();
     //         let ret = FD_C_YOLOv6WrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
     //         if !fd_c_bool_to_bool(ret) {
     //             return Err(FastDeployError::PredictError);
@@ -1408,7 +1413,7 @@ impl YOLOv7 {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_YOLOv7WrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -1466,7 +1471,7 @@ impl YOLOv8 {
         unsafe {
             let mut result = Vec::with_capacity(imgs.len());
             let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-            let one_dim_detection = OneDimDetectResultWrapper::new();
+            let one_dim_detection = OneDimDetectResult::new();
             let ret = FD_C_YOLOv8WrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -1524,7 +1529,7 @@ impl YOLOR {
     //     unsafe {
     //         let mut result = Vec::with_capacity(imgs.len());
     //         let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-    //         let one_dim_detection = OneDimDetectResultWrapper::new();
+    //         let one_dim_detection = OneDimDetectResult::new();
     //         let ret = FD_C_YOLORWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
     //         if !fd_c_bool_to_bool(ret) {
     //             return Err(FastDeployError::PredictError);
@@ -1582,7 +1587,7 @@ impl YOLOX {
     //     unsafe {
     //         let mut result = Vec::with_capacity(imgs.len());
     //         let one_dim_image = FD_C_OneDimMat { size: imgs.len(), data: &mut (*imgs.as_mut_ptr()).ptr };
-    //         let one_dim_detection = OneDimDetectResultWrapper::new();
+    //         let one_dim_detection = OneDimDetectResult::new();
     //         let ret = FD_C_YOLOXWrapperBatchPredict(self.ptr, one_dim_image, one_dim_detection.ptr);
     //         if !fd_c_bool_to_bool(ret) {
     //             return Err(FastDeployError::PredictError);
@@ -1652,7 +1657,7 @@ impl Recognizer {
                 return Err(FastDeployError::PredictError);
             }
         }
-        for (text, score) in zip(text.to_vec(), score.to_vec()) {
+        for (text, score) in zip::<Vec<String>, Vec<f32>>(text.to_vec(), score.into()) {
             result.push(RecognizerResult::new(String::from(text), score));
         };
         return Ok(result);
@@ -1716,13 +1721,13 @@ impl Classifier {
             let mut cls_scores = OneDimArrayFloatWrapper::default();
             let ret = FD_C_ClassifierWrapperBatchPredictWithIndex(self.ptr,
                                                                   one_dim_image,
-                                                                  cls_labels.ptr,
+                                                                  cls_labels.ptr.as_mut(),
                                                                   cls_scores.ptr.as_mut(),
                                                                   start_index, end_index);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            return Ok(ClassifyResult::build(cls_labels.to_vec(), cls_scores.to_vec()));
+            return Ok(ClassifyResult::build(cls_labels.into(), cls_scores.into()));
         }
     }
 }
@@ -1763,11 +1768,11 @@ impl DBDetector {
     pub fn predict(&self, image: Mat) -> Result<Vec<Vec<i32>>, FastDeployError> {
         unsafe {
             let mut box_result = TwoDimArrayInt32Wrapper::default();
-            let ret = FD_C_DBDetectorWrapperPredict(self.ptr, image.ptr, box_result.ptr);
+            let ret = FD_C_DBDetectorWrapperPredict(self.ptr, image.ptr, box_result.ptr.as_mut());
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            return Ok(box_result.to_vec());
+            return Ok(box_result.into());
         }
     }
 
@@ -1776,11 +1781,11 @@ impl DBDetector {
             let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
             let mut det_results = ThreeDimArrayInt32Wrapper::default();
             let ret = FD_C_DBDetectorWrapperBatchPredict(self.ptr, one_dim_image,
-                                                         det_results.ptr);
+                                                         det_results.ptr.as_mut());
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            return Ok(det_results.to_vec());
+            return Ok(det_results.into());
         }
     }
 }
@@ -1823,12 +1828,12 @@ impl StructureV2Table {
             let mut boxes_result = TwoDimArrayInt32Wrapper::default();
             let mut structure_result = OneDimArrayCstrWrapper::default();
             let ret = FD_C_StructureV2TableWrapperPredict(self.ptr, image.ptr,
-                                                          boxes_result.ptr,
+                                                          boxes_result.ptr.as_mut(),
                                                           structure_result.ptr.as_mut());
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            return Ok((boxes_result.to_vec(), structure_result.to_vec()));
+            return Ok((boxes_result.into(), structure_result.to_vec()));
         }
     }
 
@@ -1838,12 +1843,12 @@ impl StructureV2Table {
             let mut boxes_results = ThreeDimArrayInt32Wrapper::default();
             let mut structure_results = TwoDimArrayCstrWrapper::default();
             let ret = FD_C_StructureV2TableWrapperBatchPredict(self.ptr, one_dim_image,
-                                                               boxes_results.ptr,
+                                                               boxes_results.ptr.as_mut(),
                                                                structure_results.ptr.as_mut());
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            return Ok((boxes_results.to_vec(), structure_results.to_vec()));
+            return Ok((boxes_results.into(), structure_results.to_vec()));
         }
     }
 }
@@ -1971,9 +1976,7 @@ pub struct PPStructureV2Table {
 }
 
 impl PPStructureV2Table {
-    pub fn new(det_model: &DBDetector,
-               rec_model: &Recognizer,
-               table_model: StructureV2Table) -> PPStructureV2Table {
+    pub fn new(det_model: &DBDetector, rec_model: &Recognizer, table_model: StructureV2Table) -> PPStructureV2Table {
         PPStructureV2Table {
             ptr: unsafe {
                 FD_C_CreatePPStructureV2TableWrapper(
@@ -2033,7 +2036,7 @@ pub struct PaddleSegModel {
 }
 
 impl PaddleSegModel {
-    pub fn new(model_file: &str, params_file: &str, config_file: &str, runtime_option: &RuntimeOption, model_format: &ModelFormat) -> PaddleSegModel {
+    pub fn new(model_file: &str, params_file: &str, config_file: &str, runtime_option: &RuntimeOption, model_format: ModelFormat) -> PaddleSegModel {
         PaddleSegModel {
             ptr: unsafe {
                 FD_C_CreatePaddleSegModelWrapper(
@@ -2052,7 +2055,7 @@ impl PaddleSegModel {
             FD_C_PaddleSegModelWrapperInitialized(self.ptr) != 0
         }
     }
-    pub fn predict(&self, image: Mat) -> Result<SegmentationResult, FastDeployError> {
+    pub fn predict(&self, image: &Mat) -> Result<SegmentationResult, FastDeployError> {
         unsafe {
             let mut segmentation_result = SegmentationResultWrapper::new();
             let ret = FD_C_PaddleSegModelWrapperPredict(self.ptr, image.ptr, segmentation_result.ptr);
@@ -2067,14 +2070,14 @@ impl PaddleSegModel {
         unsafe {
             let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
             let mut segmentation_results = OneDimSegmentationResult::new();
-            let ret = FD_C_PaddleSegModelWrapperBatchPredict(self.ptr, one_dim_image,
-                                                             segmentation_results.ptr.as_mut());
+            let ret = FD_C_PaddleSegModelWrapperBatchPredict(self.ptr, one_dim_image, segmentation_results.ptr);
+
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
             let mut result = Vec::with_capacity(images.len());
-            for i in 0..segmentation_results.ptr.size {
-                result.push(SegmentationResult::from(*segmentation_results.ptr.data.wrapping_add(i)));
+            for i in 0..(*segmentation_results.ptr).size {
+                result.push(SegmentationResult::from(*(*segmentation_results.ptr).data.wrapping_add(i)));
             }
             return Ok(result);
         }
@@ -2088,10 +2091,6 @@ impl Drop for PaddleSegModel {
         }
     }
 }
-
-
-
-
 
 
 

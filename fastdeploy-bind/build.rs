@@ -5,6 +5,20 @@ use std::io;
 use std::path::PathBuf;
 use std::process::Command;
 
+use cmake::Config;
+
+fn get_cpp_link_stdlib(target: &str) -> Option<&'static str> {
+    if target.contains("msvc") {
+        None
+    } else if target.contains("apple") || target.contains("freebsd") || target.contains("openbsd") {
+        Some("c++")
+    } else if target.contains("android") {
+        Some("c++_shared")
+    } else {
+        Some("stdc++")
+    }
+}
+
 fn output_dir() -> PathBuf {
     PathBuf::from(env::var("OUT_DIR").unwrap())
 }
@@ -31,24 +45,43 @@ fn fetch() -> io::Result<()> {
 }
 
 fn build() -> io::Result<()> {
-    let mut config = cmake::Config::new(fastdeploy_src_dir());
+    let out = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let target = env::var("TARGET").unwrap();
+    let mut config = Config::new(fastdeploy_src_dir());
     config
-        .out_dir("FastDeploy")
+        .generator("Visual Studio 17 2022")
+        // .define("CMAKE_MAKE_PROGRAM", "C:/software/CLion 2022.3.2/bin/ninja/win/x64/ninja.exe")
+        .define("OPENCV_DIRECTORY", "E:/develop/opencv4.9/build/x64/vc16/lib")
         .define("ENABLE_VISION", "ON")
         .define("ENABLE_ORT_BACKEND", "ON")
         .define("BUILD_PADDLE2ONNX", "ON")
         .define("WITH_CAPI", "ON")
         .define("CMAKE_BUILD_TYPE", "Release")
+        .define("CMAKE_VERBOSE_MAKEFILE", "ON")
+        .build_arg("-j18")
+        .build_arg("-v")
         .profile("Release");
     println!("============{}=============", config.get_profile());
 
-    let dst = config.build();
-    println!("cargo:rustc-link-search=native={}", dst.display());
+    let destination = config.build();
+
+    // 输出构建完成信息
+    println!("cargo:rerun-if-changed=src/lib.rs");
+
+    if target.contains("window") && !target.contains("gnu") {
+        println!(
+            "cargo:rustc-link-search={}",
+            out.join("build").join("Release").display()
+        );
+    } else {
+        println!("cargo:rustc-link-search={}", out.join("build").display());
+    }
+    println!("cargo:rustc-link-search=native={}", destination.display());
+    println!("cargo:rustc-link-lib=fastdeploy");
     Ok(())
 }
 
 fn build_fastdeploy() -> Vec<PathBuf> {
-    println!("----------------------");
     let include_paths: Vec<PathBuf> =
         if let Ok(fastdeploy_install_dir) = env::var("FASTDEPLOY_INSTALL_DIR") {
             // use prebuild fastdeploy dir
@@ -64,25 +97,20 @@ fn build_fastdeploy() -> Vec<PathBuf> {
             // fetch from github and build
             fetch().unwrap();
             build().unwrap();
-            for suffix in ["lib", "lib64"].iter() {
-                println!(
-                    "cargo:rustc-link-search=native={}",
-                    output_dir().join(suffix).to_string_lossy()
-                );
-            }
             vec![output_dir().join("include")]
         };
     return include_paths;
 }
 
 fn main() {
-    env::set_var("FASTDEPLOY_INSTALL_DIR", "E:/FastDeploy/build/install");
     env::set_var("OUT_DIR", "./");
-    let bindings = build_fastdeploy();
-    println!("============fastdeploy_dir: {:?}================", bindings[0]);
-    let include_paths = (&bindings[0]).to_string_lossy();
+    env::set_var("CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG", "true");
+    // let bindings = build_fastdeploy();
+    println!("============fastdeploy_dir================");
+    let include_paths = "E:/FastDeploy/build/install_mnn/include";
     println!("inculde path{:?}", include_paths);
-    println!("cargo:rustc-link-search=native={}", "E:/FastDeploy/build/install/lib");
+    println!("cargo:rustc-link-search=native={}", "E:/FastDeploy/build/install_mnn/lib");
+    println!("cargo:rustc-link-search=native={}", "E:/FastDeploy-rust/target/debug");
     println!("cargo:rustc-link-lib=fastdeploy");
     println!("cargo:rerun-if-changed=wrapper.h");
     let bindings = bindgen::Builder::default()

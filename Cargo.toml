@@ -1,4 +1,3 @@
-
 [workspace]
 members = ["fastdeploy-rs", "fastdeploy-bind", "demo"]
 resolver = "2"

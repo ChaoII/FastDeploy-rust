@@ -3,6 +3,5 @@
 //
 
 
-
-
+#include <fastdeploy_capi/vision.h>
 #include <fastdeploy_capi/vision.h>

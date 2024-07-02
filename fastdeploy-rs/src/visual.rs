@@ -10,18 +10,19 @@ use crate::type_bridge::Mat;
 pub mod detection {
     use super::*;
 
-    pub fn vis_detection(img: &Mat, result: &DetectionResult, score_threshold: f32, line_size: i32, font_size: f32) -> Mat {
+    pub fn vis_detection(img: &Mat, result: DetectionResult, score_threshold: f32, line_size: i32, font_size: f32) -> Mat {
         unsafe {
+            let mut c = FD_C_VisDetection(img.ptr, &mut result.into(), score_threshold, line_size, font_size);
             Mat {
-                ptr: FD_C_VisDetection(img.ptr, &mut result.to_raw_ptr(), score_threshold, line_size, font_size),
+                ptr: c,
             }
         }
     }
 
-    pub fn vis_detection_with_label(img: &Mat, result: &DetectionResult, labels: Vec<String>, score_threshold: f32, line_size: i32, font_size: f32) -> Mat {
+    pub fn vis_detection_with_label(img: &Mat, result: DetectionResult, labels: Vec<&str>, score_threshold: f32, line_size: i32, font_size: f32) -> Mat {
         unsafe {
             Mat {
-                ptr: FD_C_VisDetectionWithLabel(img.ptr, &mut result.to_raw_ptr(), &mut vec_string_to_fd_one_dim_array_c_str(labels), score_threshold, line_size, font_size),
+                ptr: FD_C_VisDetectionWithLabel(img.ptr, &mut result.into(), &mut vec_string_to_fd_one_dim_array_c_str(labels), score_threshold, line_size, font_size),
             }
         }
     }
@@ -38,7 +39,7 @@ pub mod classify {
         }
     }
 
-    pub fn vis_detection_with_label(img: &Mat, result: &ClassifyResult, labels: Vec<String>, top_k: i32, score_threshold: f32, font_size: f32) -> Mat {
+    pub fn vis_classify_with_label(img: &Mat, result: &ClassifyResult, labels: Vec<&str>, top_k: i32, score_threshold: f32, font_size: f32) -> Mat {
         unsafe {
             Mat {
                 ptr: FD_C_VisClassificationWithLabel(img.ptr, &mut result.to_raw_ptr(), &mut vec_string_to_fd_one_dim_array_c_str(labels), top_k, score_threshold, font_size),

@@ -13,7 +13,9 @@ Cargo.lock
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 fastdeploy-bind/bindings.rs
-demo/models/ppyoloe_crn_l_36e_pphuman
 result.jpg
-demo/models
-demo/dict.txt
+demo/demo_files/models
+demo/demo_files/dict.txt
+demo/demo_files
+fastdeploy-bind/build
+fastdeploy-bind/FastDeploy
