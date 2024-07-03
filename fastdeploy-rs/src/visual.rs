@@ -1,4 +1,3 @@
-use fastdeploy_bind::*;
 use fastdeploy_bind::{FD_C_VisDetection, FD_C_VisDetectionWithLabel};
 use fastdeploy_bind::{FD_C_VisClassification, FD_C_VisClassificationWithLabel};
 
@@ -8,11 +7,16 @@ use crate::type_bridge::common::vec_string_to_fd_one_dim_array_c_str;
 use crate::type_bridge::Mat;
 
 pub mod detection {
+    use fastdeploy_bind::FD_C_DetectionResult;
+
     use super::*;
 
     pub fn vis_detection(img: &Mat, result: DetectionResult, score_threshold: f32, line_size: i32, font_size: f32) -> Mat {
         unsafe {
-            let mut c = FD_C_VisDetection(img.ptr, &mut result.into(), score_threshold, line_size, font_size);
+            let mut a = result.clone().into();
+            let s = &mut a as *mut FD_C_DetectionResult;
+            let c = FD_C_VisDetection(img.ptr, s, score_threshold, line_size, font_size);
+            // DetectionResult::release_raw_ptr(a);
             Mat {
                 ptr: c,
             }

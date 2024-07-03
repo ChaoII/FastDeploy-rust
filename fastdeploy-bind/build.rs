@@ -7,6 +7,7 @@ use std::process::Command;
 
 use cmake::Config;
 
+#[warn(unused)]
 fn get_cpp_link_stdlib(target: &str) -> Option<&'static str> {
     if target.contains("msvc") {
         None
@@ -22,11 +23,11 @@ fn get_cpp_link_stdlib(target: &str) -> Option<&'static str> {
 fn output_dir() -> PathBuf {
     PathBuf::from(env::var("OUT_DIR").unwrap())
 }
-
+#[warn(unused)]
 fn fastdeploy_src_dir() -> PathBuf {
     output_dir().join("FastDeploy")
 }
-
+#[warn(unused)]
 fn fetch() -> io::Result<()> {
     let target_dir = fastdeploy_src_dir();
     if target_dir.exists() {
@@ -43,7 +44,7 @@ fn fetch() -> io::Result<()> {
         Err(io::Error::new(io::ErrorKind::Other, "fetch failed"))
     }
 }
-
+#[warn(unused)]
 fn build() -> io::Result<()> {
     let out = PathBuf::from(env::var("OUT_DIR").unwrap());
     let target = env::var("TARGET").unwrap();
@@ -80,7 +81,7 @@ fn build() -> io::Result<()> {
     println!("cargo:rustc-link-lib=fastdeploy");
     Ok(())
 }
-
+#[warn(unused)]
 fn build_fastdeploy() -> Vec<PathBuf> {
     let include_paths: Vec<PathBuf> =
         if let Ok(fastdeploy_install_dir) = env::var("FASTDEPLOY_INSTALL_DIR") {

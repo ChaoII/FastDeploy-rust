@@ -1,8 +1,10 @@
 use fastdeploy_rs::enum_variables::ModelFormat;
-use fastdeploy_rs::model::{Classifier, DBDetector, PaddleClasModel, PaddleSegModel, PPOCRv3, PPYOLOE, Recognizer};
+use fastdeploy_rs::model::{Classifier, DBDetector,
+                           PaddleClasModel, PaddleSegModel,
+                           PPOCRv3, PPYOLOE, Recognizer};
 use fastdeploy_rs::runtime_option::RuntimeOption;
 use fastdeploy_rs::type_bridge::Mat;
-use fastdeploy_rs::visual::detection::{vis_detection, vis_detection_with_label};
+use fastdeploy_rs::visual::detection::vis_detection;
 
 pub fn test_classify() {
     let model_file = "demo/demo_files/models/PPLCNetV2_base_ssld_infer/inference.pdmodel";
@@ -42,7 +44,7 @@ pub fn test_detection() {
     let img1 = Mat::imread("demo/demo_files/detection1.jpg");
     let result = model.predict(&img1);
     println!("detection result:{:?}", result);
-    let labels = vec!["sd", "s", "rrr", "ccc"];
+    //let labels = vec!["sd", "s", "rrr", "ccc"];
     let vis_image = vis_detection(&img1, result.unwrap(), 0.2, 1, 0.5);
     vis_image.imwrite("222.jpg");
 }

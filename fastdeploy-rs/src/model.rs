@@ -42,7 +42,7 @@ impl PaddleClasModel {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let classify_result = ClassifyResult::from((*c_classify_result.ptr));
+            let classify_result = ClassifyResult::from(*c_classify_result.ptr);
             return Ok(classify_result);
         };
     }
@@ -57,7 +57,7 @@ impl PaddleClasModel {
             }
             for i in 0..(*c_one_dim_classify_result.ptr).size {
                 let c = (*c_one_dim_classify_result.ptr).data.wrapping_add(i);
-                let t = ClassifyResult::from((*c));
+                let t = ClassifyResult::from(*c);
                 result.push(t);
             }
             return Ok(result);
@@ -118,7 +118,7 @@ impl PPYOLOE {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -164,7 +164,7 @@ impl PicoDet {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -179,7 +179,7 @@ impl PicoDet {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -223,7 +223,7 @@ impl PPYOLO {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -238,7 +238,7 @@ impl PPYOLO {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -282,7 +282,7 @@ impl YOLOv3 {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -297,7 +297,7 @@ impl YOLOv3 {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -341,7 +341,7 @@ impl PaddleYOLOX {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -356,7 +356,7 @@ impl PaddleYOLOX {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -400,7 +400,7 @@ impl FasterRCNN {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -415,7 +415,7 @@ impl FasterRCNN {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -459,7 +459,7 @@ impl MaskRCNN {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -474,7 +474,7 @@ impl MaskRCNN {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -518,7 +518,7 @@ impl SSD {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -533,7 +533,7 @@ impl SSD {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -577,7 +577,7 @@ impl PaddleYOLOv5 {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -592,7 +592,7 @@ impl PaddleYOLOv5 {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -636,7 +636,7 @@ impl PaddleYOLOv6 {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -651,7 +651,7 @@ impl PaddleYOLOv6 {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -695,7 +695,7 @@ impl PaddleYOLOv7 {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -710,7 +710,7 @@ impl PaddleYOLOv7 {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -754,7 +754,7 @@ impl PaddleYOLOv8 {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -769,7 +769,7 @@ impl PaddleYOLOv8 {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -814,7 +814,7 @@ impl RTMDet {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -829,7 +829,7 @@ impl RTMDet {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -874,7 +874,7 @@ impl CascadeRCNN {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -889,7 +889,7 @@ impl CascadeRCNN {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -933,7 +933,7 @@ impl PSSDet {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -948,7 +948,7 @@ impl PSSDet {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -992,7 +992,7 @@ impl RetinaNet {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -1007,7 +1007,7 @@ impl RetinaNet {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -1051,7 +1051,7 @@ impl FCOS {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -1066,7 +1066,7 @@ impl FCOS {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -1111,7 +1111,7 @@ impl TTFNet {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -1126,7 +1126,7 @@ impl TTFNet {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -1170,7 +1170,7 @@ impl TOOD {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -1185,7 +1185,7 @@ impl TOOD {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -1230,7 +1230,7 @@ impl GFL {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -1245,7 +1245,7 @@ impl GFL {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -1289,7 +1289,7 @@ impl YOLOv5 {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -1304,7 +1304,7 @@ impl YOLOv5 {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -1347,7 +1347,7 @@ impl YOLOv6 {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -1362,7 +1362,7 @@ impl YOLOv6 {
     //         }
     //         for i in 0..(*one_dim_detection.ptr).size {
     //             let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-    //             let t = DetectionResult::from((*c));
+    //             let t = DetectionResult::from(*c);
     //             result.push(t)
     //         }
     //         return Ok(result);
@@ -1405,7 +1405,7 @@ impl YOLOv7 {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -1420,7 +1420,7 @@ impl YOLOv7 {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -1463,7 +1463,7 @@ impl YOLOv8 {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -1478,7 +1478,7 @@ impl YOLOv8 {
             }
             for i in 0..(*one_dim_detection.ptr).size {
                 let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-                let t = DetectionResult::from((*c));
+                let t = DetectionResult::from(*c);
                 result.push(t)
             }
             return Ok(result);
@@ -1521,7 +1521,7 @@ impl YOLOR {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -1536,7 +1536,7 @@ impl YOLOR {
     //         }
     //         for i in 0..(*one_dim_detection.ptr).size {
     //             let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-    //             let t = DetectionResult::from((*c));
+    //             let t = DetectionResult::from(*c);
     //             result.push(t)
     //         }
     //         return Ok(result);
@@ -1579,7 +1579,7 @@ impl YOLOX {
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
             }
-            let detection_result = DetectionResult::from((*c_detection_result.ptr));
+            let detection_result = DetectionResult::from(*c_detection_result.ptr);
             return Ok(detection_result);
         }
     }
@@ -1594,7 +1594,7 @@ impl YOLOX {
     //         }
     //         for i in 0..(*one_dim_detection.ptr).size {
     //             let c = (*one_dim_detection.ptr).data.wrapping_add(i);
-    //             let t = DetectionResult::from((*c));
+    //             let t = DetectionResult::from(*c);
     //             result.push(t)
     //         }
     //         return Ok(result);
@@ -1881,7 +1881,7 @@ impl PPOCRv2 {
     }
     pub fn predict(&self, image: Mat) -> Result<OCRResult, FastDeployError> {
         unsafe {
-            let mut ocr_result = OcrResultWrapper::new();
+            let  ocr_result = OcrResultWrapper::new();
             let ret = FD_C_PPOCRv2WrapperPredict(self.ptr, image.ptr, ocr_result.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -1893,7 +1893,7 @@ impl PPOCRv2 {
     pub fn batch_predict(&self, images: &mut Vec<Mat>) -> Result<Vec<OCRResult>, FastDeployError> {
         unsafe {
             let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
-            let mut ocr_results = OneDimOcrResultWrapper::default();
+            let  ocr_results = OneDimOcrResultWrapper::default();
             let ret = FD_C_PPOCRv2WrapperBatchPredict(self.ptr, one_dim_image,
                                                       ocr_results.ptr);
             if !fd_c_bool_to_bool(ret) {
@@ -1936,7 +1936,7 @@ impl PPOCRv3 {
     }
     pub fn predict(&self, image: Mat) -> Result<OCRResult, FastDeployError> {
         unsafe {
-            let mut ocr_result = OcrResultWrapper::new();
+            let  ocr_result = OcrResultWrapper::new();
             let ret = FD_C_PPOCRv3WrapperPredict(self.ptr, image.ptr, ocr_result.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -1948,7 +1948,7 @@ impl PPOCRv3 {
     pub fn batch_predict(&self, images: &mut Vec<Mat>) -> Result<Vec<OCRResult>, FastDeployError> {
         unsafe {
             let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
-            let mut ocr_results = OneDimOcrResultWrapper::default();
+            let  ocr_results = OneDimOcrResultWrapper::default();
             let ret = FD_C_PPOCRv3WrapperBatchPredict(self.ptr, one_dim_image,
                                                       ocr_results.ptr);
             if !fd_c_bool_to_bool(ret) {
@@ -1995,7 +1995,7 @@ impl PPStructureV2Table {
     }
     pub fn predict(&self, image: Mat) -> Result<OCRResult, FastDeployError> {
         unsafe {
-            let mut ocr_result = OcrResultWrapper::new();
+            let  ocr_result = OcrResultWrapper::new();
             let ret = FD_C_PPStructureV2TableWrapperPredict(self.ptr, image.ptr, ocr_result.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -2007,7 +2007,7 @@ impl PPStructureV2Table {
     pub fn batch_predict(&self, images: &mut Vec<Mat>) -> Result<Vec<OCRResult>, FastDeployError> {
         unsafe {
             let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
-            let mut ocr_results = OneDimOcrResultWrapper::default();
+            let  ocr_results = OneDimOcrResultWrapper::default();
             let ret = FD_C_PPStructureV2TableWrapperBatchPredict(self.ptr, one_dim_image,
                                                                  ocr_results.ptr);
             if !fd_c_bool_to_bool(ret) {
@@ -2057,7 +2057,7 @@ impl PaddleSegModel {
     }
     pub fn predict(&self, image: &Mat) -> Result<SegmentationResult, FastDeployError> {
         unsafe {
-            let mut segmentation_result = SegmentationResultWrapper::new();
+            let  segmentation_result = SegmentationResultWrapper::new();
             let ret = FD_C_PaddleSegModelWrapperPredict(self.ptr, image.ptr, segmentation_result.ptr);
             if !fd_c_bool_to_bool(ret) {
                 return Err(FastDeployError::PredictError);
@@ -2069,7 +2069,7 @@ impl PaddleSegModel {
     pub fn batch_predict(&self, images: &mut Vec<Mat>) -> Result<Vec<SegmentationResult>, FastDeployError> {
         unsafe {
             let one_dim_image = FD_C_OneDimMat { size: images.len(), data: &mut (*images.as_mut_ptr()).ptr };
-            let mut segmentation_results = OneDimSegmentationResult::new();
+            let  segmentation_results = OneDimSegmentationResult::new();
             let ret = FD_C_PaddleSegModelWrapperBatchPredict(self.ptr, one_dim_image, segmentation_results.ptr);
 
             if !fd_c_bool_to_bool(ret) {

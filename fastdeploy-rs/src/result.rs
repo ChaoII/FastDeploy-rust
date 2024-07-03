@@ -35,13 +35,11 @@ impl ClassifyResult {
 }
 
 impl From<FD_C_ClassifyResult> for ClassifyResult {
-    fn from(mut value: FD_C_ClassifyResult) -> Self {
-        unsafe {
-            Self {
-                label_ids: fd_c_one_dim_array_int32_to_vec_i32(value.label_ids),
-                scores: fd_c_one_dim_array_float_to_vec_f32(value.scores),
-                type_: ResultType::from(value.type_),
-            }
+    fn from(value: FD_C_ClassifyResult) -> Self {
+        Self {
+            label_ids: fd_c_one_dim_array_int32_to_vec_i32(value.label_ids),
+            scores: fd_c_one_dim_array_float_to_vec_f32(value.scores),
+            type_: ResultType::from(value.type_),
         }
     }
 }
@@ -220,16 +218,14 @@ pub fn fd_c_two_dim_mask_to_vec_mask(masks: FD_C_OneDimMask) -> Vec<Mask> {
 }
 
 pub fn vec_mask_to_fd_c_two_dim_mask(masks: Vec<Mask>) -> FD_C_OneDimMask {
-    unsafe {
-        let mut s = Vec::with_capacity(masks.len());
-        for i in 0..masks.len() {
-            s.push(masks[i].clone().to_raw_ptr());
-        }
-        return FD_C_OneDimMask {
-            size: masks.len(),
-            data: s.as_mut_ptr(),
-        };
+    let mut s = Vec::with_capacity(masks.len());
+    for i in 0..masks.len() {
+        s.push(masks[i].clone().to_raw_ptr());
     }
+    return FD_C_OneDimMask {
+        size: masks.len(),
+        data: s.as_mut_ptr(),
+    };
 }
 
 #[derive(Debug, Clone)]
@@ -247,22 +243,47 @@ pub struct DetectionResult {
 impl Into<FD_C_DetectionResult> for DetectionResult {
     fn into(self) -> FD_C_DetectionResult {
         unsafe {
+            let boxes_wrapper = TwoDimArrayFloatWrapper::from(self.boxes.clone());
+            let boxes_ptr = Box::into_raw(boxes_wrapper.ptr.clone());
+
+            // 将 rotated_boxes 转换为裸指针
+            let rotated_boxes_wrapper = TwoDimArrayFloatWrapper::from(self.rotated_boxes.clone());
+            let rotated_boxes_ptr = Box::into_raw(rotated_boxes_wrapper.ptr.clone());
+
+            // 将 scores 转换为裸指针
+            let scores_wrapper = OneDimArrayFloatWrapper::from(self.scores.clone());
+            let scores_ptr = Box::into_raw(scores_wrapper.ptr.clone());
+
+            // 将 label_ids 转换为裸指针
+            let label_ids_wrapper = OneDimArrayInt32Wrapper::from(self.label_ids.clone());
+            let label_ids_ptr = Box::into_raw(label_ids_wrapper.ptr.clone());
+
+            // 转换 masks
             let mut msk: Vec<FD_C_Mask> = self.masks.clone().into_iter().map(|w| w.into()).collect();
-            FD_C_DetectionResult {
-                boxes: *TwoDimArrayFloatWrapper::from(self.boxes.clone()).ptr,
-                rotated_boxes: *TwoDimArrayFloatWrapper::from(self.rotated_boxes.clone()).ptr,
-                scores: *OneDimArrayFloatWrapper::from(self.scores.clone()).ptr,
-                label_ids: *OneDimArrayInt32Wrapper::from(self.label_ids.clone()).ptr,
-                masks: FD_C_OneDimMask { data: msk.as_mut_ptr(), size: self.masks.len() },
+            let masks = FD_C_OneDimMask { data: msk.as_mut_ptr(), size: self.masks.len() };
+            // 构造 FD_C_DetectionResult
+            let detection_result = FD_C_DetectionResult {
+                boxes: *boxes_ptr,
+                rotated_boxes: *rotated_boxes_ptr,
+                scores: *scores_ptr,
+                label_ids: *label_ids_ptr,
+                masks,
                 contain_masks: bool_to_fd_c_bool(self.contain_masks),
                 type_: self.type_ as FD_C_ResultType,
-            }
+            };
+
+            // 手动忘记 wrapper，避免 Drop 被调用
+            std::mem::forget(boxes_wrapper);
+            std::mem::forget(rotated_boxes_wrapper);
+            std::mem::forget(scores_wrapper);
+            std::mem::forget(label_ids_wrapper);
+            detection_result
         }
     }
 }
 
 impl From<FD_C_DetectionResult> for DetectionResult {
-    fn from(mut value: FD_C_DetectionResult) -> Self {
+    fn from(value: FD_C_DetectionResult) -> Self {
         Self {
             boxes: fd_c_two_dim_array_float_to_vec_float(value.boxes),
             rotated_boxes: fd_c_two_dim_array_float_to_vec_float(value.rotated_boxes),
@@ -285,6 +306,18 @@ impl Default for DetectionResult {
             masks: vec![],
             contain_masks: false,
             type_: ResultType::UNKNOWN_RESULT,
+        }
+    }
+}
+
+impl DetectionResult {
+    pub fn release_raw_ptr(result: FD_C_DetectionResult) {
+        unsafe {
+            // 重新将裸指针转换为 Box，并自动释放内存
+            let _boxes = Box::from_raw(&result.boxes as *const _ as *mut FD_C_OneDimArrayFloat);
+            let _rotated_boxes = Box::from_raw(&result.rotated_boxes as *const _ as *mut FD_C_OneDimArrayFloat);
+            let _scores = Box::from_raw(&result.scores as *const _ as *mut FD_C_OneDimArrayFloat);
+            let _label_ids = Box::from_raw(&result.label_ids as *const _ as *mut FD_C_OneDimArrayInt32);
         }
     }
 }
@@ -318,7 +351,7 @@ pub struct OCRResult {
 }
 
 impl From<FD_C_OCRResult> for OCRResult {
-    fn from(mut value: FD_C_OCRResult) -> Self {
+    fn from(value: FD_C_OCRResult) -> Self {
         Self {
             boxes: fd_c_two_dim_array_int32_to_vec_i32(value.boxes),
             text: fd_one_dim_array_c_str_to_vec_string(value.text),
