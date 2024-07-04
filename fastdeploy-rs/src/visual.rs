@@ -1,9 +1,13 @@
 use fastdeploy_bind::{FD_C_VisDetection, FD_C_VisDetectionWithLabel};
 use fastdeploy_bind::{FD_C_VisClassification, FD_C_VisClassificationWithLabel};
+use fastdeploy_bind::FD_C_VisOcr;
+use fastdeploy_bind::FD_C_VisSegmentation;
 
 use crate::result::ClassifyResult;
 use crate::result::DetectionResult;
-use crate::type_bridge::common::vec_string_to_fd_one_dim_array_c_str;
+use crate::result::OCRResult;
+use crate::result::SegmentationResult;
+use crate::type_bridge::common::vec_to_c_1_cstr;
 use crate::type_bridge::Mat;
 
 pub mod detection {
@@ -23,10 +27,10 @@ pub mod detection {
         }
     }
 
-    pub fn vis_detection_with_label(img: &Mat, result: DetectionResult, labels: Vec<&str>, score_threshold: f32, line_size: i32, font_size: f32) -> Mat {
+    pub fn vis_detection_with_label(img: &Mat, result: DetectionResult, labels: Vec<String>, score_threshold: f32, line_size: i32, font_size: f32) -> Mat {
         unsafe {
             Mat {
-                ptr: FD_C_VisDetectionWithLabel(img.ptr, &mut result.into(), &mut vec_string_to_fd_one_dim_array_c_str(labels), score_threshold, line_size, font_size),
+                ptr: FD_C_VisDetectionWithLabel(img.ptr, &mut result.into(), &mut vec_to_c_1_cstr(labels), score_threshold, line_size, font_size),
             }
         }
     }
@@ -35,47 +39,46 @@ pub mod detection {
 pub mod classify {
     use super::*;
 
-    pub fn vis_classify(img: &Mat, result: &ClassifyResult, top_k: i32, score_threshold: f32, font_size: f32) -> Mat {
+    pub fn vis_classify(img: &Mat, result: ClassifyResult, top_k: i32, score_threshold: f32, font_size: f32) -> Mat {
         unsafe {
             Mat {
-                ptr: FD_C_VisClassification(img.ptr, &mut result.to_raw_ptr(), top_k, score_threshold, font_size),
+                ptr: FD_C_VisClassification(img.ptr, &mut result.into(), top_k, score_threshold, font_size),
             }
         }
     }
 
-    pub fn vis_classify_with_label(img: &Mat, result: &ClassifyResult, labels: Vec<&str>, top_k: i32, score_threshold: f32, font_size: f32) -> Mat {
+    pub fn vis_classify_with_label(img: &Mat, result: ClassifyResult, labels: Vec<String>, top_k: i32, score_threshold: f32, font_size: f32) -> Mat {
         unsafe {
             Mat {
-                ptr: FD_C_VisClassificationWithLabel(img.ptr, &mut result.to_raw_ptr(), &mut vec_string_to_fd_one_dim_array_c_str(labels), top_k, score_threshold, font_size),
+                ptr: FD_C_VisClassificationWithLabel(img.ptr, &mut result.into(), &mut vec_to_c_1_cstr(labels), top_k, score_threshold, font_size),
             }
         }
     }
 }
 
-// pub mod ocr {
-//     use crate::result::OcrResult;
-//
-//     use super::*;
-//
-//     pub fn vis_classify(img: &Mat, result: &OcrResult) -> Mat {
-//         unsafe {
-//             Mat {
-//                 ptr: FD_C_VisOcr(img.ptr, result.ptr),
-//             }
-//         }
-//     }
-// }
+pub mod ocr {
+    use super::*;
 
-// pub mod segmentation {
-//     use crate::result::SegmentationResult;
-//
-//     use super::*;
-//
-//     pub fn vis_segmentation(img: &Mat, result: &SegmentationResult, weight: f32) -> Mat {
-//         unsafe {
-//             Mat {
-//                 ptr: FD_C_VisSegmentation(img.ptr, result.ptr, weight),
-//             }
-//         }
-//     }
-// }
+    pub fn vis_ocr(img: &Mat, result: OCRResult) -> Mat {
+        unsafe {
+            Mat {
+                ptr: FD_C_VisOcr(img.ptr, &mut result.into()),
+            }
+        }
+    }
+}
+
+pub mod segmentation {
+    use fastdeploy_bind::FD_C_SegmentationResult;
+    use super::*;
+
+    pub fn vis_segmentation(img: &Mat, result: SegmentationResult, weight: f32) -> Mat {
+        unsafe {
+            let mut a = result.clone().into();
+            let s = &mut a as *mut FD_C_SegmentationResult;
+            Mat {
+                ptr: FD_C_VisSegmentation(img.ptr, s, weight),
+            }
+        }
+    }
+}

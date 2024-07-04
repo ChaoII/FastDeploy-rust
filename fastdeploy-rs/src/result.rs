@@ -5,7 +5,6 @@
 use fastdeploy_bind::*;
 
 use crate::enum_variables::ResultType;
-use crate::type_bridge::{OneDimArrayFloatWrapper, OneDimArrayInt32Wrapper, TwoDimArrayFloatWrapper};
 use crate::type_bridge::common::*;
 
 type detect_result_t = *mut FD_C_DetectionResult;
@@ -17,32 +16,26 @@ pub struct ClassifyResult {
     pub type_: ResultType,
 }
 
-impl ClassifyResult {
-    pub fn build(label_ids: Vec<i32>, scores: Vec<f32>) -> Self {
+impl From<FD_C_ClassifyResult> for ClassifyResult {
+    fn from(value: FD_C_ClassifyResult) -> Self {
         Self {
-            label_ids,
-            scores,
-            type_: ResultType::CLASSIFY,
+            label_ids: c_1_int32_to_vec(value.label_ids),
+            scores: c_1_float_to_vec(value.scores),
+            type_: ResultType::from(value.type_),
         }
     }
-    pub fn to_raw_ptr(&self) -> FD_C_ClassifyResult {
+}
+
+impl Into<FD_C_ClassifyResult> for ClassifyResult {
+    fn into(self) -> FD_C_ClassifyResult {
         FD_C_ClassifyResult {
-            label_ids: vec_i32_to_fd_c_one_dim_array_int32(self.label_ids.clone()),
-            scores: vec_f32_to_fd_c_one_dim_array_float(self.scores.clone()),
+            label_ids: vec_to_c_1_int32(self.label_ids.clone()),
+            scores: vec_to_c_1_float(self.scores.clone()),
             type_: self.type_ as FD_C_ResultType,
         }
     }
 }
 
-impl From<FD_C_ClassifyResult> for ClassifyResult {
-    fn from(value: FD_C_ClassifyResult) -> Self {
-        Self {
-            label_ids: fd_c_one_dim_array_int32_to_vec_i32(value.label_ids),
-            scores: fd_c_one_dim_array_float_to_vec_f32(value.scores),
-            type_: ResultType::from(value.type_),
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct SegmentationResult {
@@ -56,11 +49,23 @@ pub struct SegmentationResult {
 impl From<FD_C_SegmentationResult> for SegmentationResult {
     fn from(value: FD_C_SegmentationResult) -> Self {
         Self {
-            label_map: fd_c_one_dim_array_uint8_to_vec_u8(value.label_map),
-            score_map: fd_c_one_dim_array_float_to_vec_f32(value.score_map),
-            shape: fd_c_one_dim_array_int64_to_vec_i64(value.shape),
-            contain_score_map: fd_c_bool_to_bool(value.contain_score_map),
+            label_map: c_1_uint8_to_vec(value.label_map),
+            score_map: c_1_float_to_vec(value.score_map),
+            shape: c_1_int64_to_vec(value.shape),
+            contain_score_map: c_bool_to_bool(value.contain_score_map),
             type_: ResultType::from(value.type_),
+        }
+    }
+}
+
+impl Into<FD_C_SegmentationResult> for SegmentationResult {
+    fn into(self) -> FD_C_SegmentationResult {
+        FD_C_SegmentationResult {
+            label_map: vec_to_c_1_uint8(self.label_map),
+            score_map: vec_to_c_1_float(self.score_map),
+            shape: vec_to_c_1_int64(self.shape),
+            contain_score_map: bool_to_c_bool(self.contain_score_map),
+            type_: self.type_ as FD_C_ResultType,
         }
     }
 }
@@ -167,8 +172,8 @@ struct Mask {
 impl Mask {
     pub fn to_raw_ptr(self) -> FD_C_Mask {
         FD_C_Mask {
-            data: vec_u8_to_fd_c_one_dim_array_uint8(self.data),
-            shape: vec_i64_to_fd_c_one_dim_array_int64(self.shape),
+            data: vec_to_c_1_uint8(self.data),
+            shape: vec_to_c_1_int64(self.shape),
             type_: self.type_ as FD_C_ResultType,
         }
     }
@@ -187,8 +192,8 @@ impl Default for Mask {
 impl From<FD_C_Mask> for Mask {
     fn from(value: FD_C_Mask) -> Self {
         Self {
-            data: fd_c_one_dim_array_uint8_to_vec_u8(value.data),
-            shape: fd_c_one_dim_array_int64_to_vec_i64(value.shape),
+            data: c_1_uint8_to_vec(value.data),
+            shape: c_1_int64_to_vec(value.shape),
             type_: ResultType::from(value.type_),
         }
     }
@@ -197,8 +202,8 @@ impl From<FD_C_Mask> for Mask {
 impl Into<FD_C_Mask> for Mask {
     fn into(self) -> FD_C_Mask {
         FD_C_Mask {
-            data: vec_u8_to_fd_c_one_dim_array_uint8(self.data),
-            shape: vec_i64_to_fd_c_one_dim_array_int64(self.shape),
+            data: vec_to_c_1_uint8(self.data),
+            shape: vec_to_c_1_int64(self.shape),
             type_: self.type_ as FD_C_ResultType,
         }
     }
@@ -243,40 +248,19 @@ pub struct DetectionResult {
 impl Into<FD_C_DetectionResult> for DetectionResult {
     fn into(self) -> FD_C_DetectionResult {
         unsafe {
-            let boxes_wrapper = TwoDimArrayFloatWrapper::from(self.boxes.clone());
-            let boxes_ptr = Box::into_raw(boxes_wrapper.ptr.clone());
-
-            // 将 rotated_boxes 转换为裸指针
-            let rotated_boxes_wrapper = TwoDimArrayFloatWrapper::from(self.rotated_boxes.clone());
-            let rotated_boxes_ptr = Box::into_raw(rotated_boxes_wrapper.ptr.clone());
-
-            // 将 scores 转换为裸指针
-            let scores_wrapper = OneDimArrayFloatWrapper::from(self.scores.clone());
-            let scores_ptr = Box::into_raw(scores_wrapper.ptr.clone());
-
-            // 将 label_ids 转换为裸指针
-            let label_ids_wrapper = OneDimArrayInt32Wrapper::from(self.label_ids.clone());
-            let label_ids_ptr = Box::into_raw(label_ids_wrapper.ptr.clone());
-
             // 转换 masks
             let mut msk: Vec<FD_C_Mask> = self.masks.clone().into_iter().map(|w| w.into()).collect();
             let masks = FD_C_OneDimMask { data: msk.as_mut_ptr(), size: self.masks.len() };
             // 构造 FD_C_DetectionResult
             let detection_result = FD_C_DetectionResult {
-                boxes: *boxes_ptr,
-                rotated_boxes: *rotated_boxes_ptr,
-                scores: *scores_ptr,
-                label_ids: *label_ids_ptr,
+                boxes: vec_to_c_2_float(self.boxes),
+                rotated_boxes: vec_to_c_2_float(self.rotated_boxes),
+                scores: vec_to_c_1_float(self.scores),
+                label_ids: vec_to_c_1_int32(self.label_ids),
                 masks,
-                contain_masks: bool_to_fd_c_bool(self.contain_masks),
+                contain_masks: bool_to_c_bool(self.contain_masks),
                 type_: self.type_ as FD_C_ResultType,
             };
-
-            // 手动忘记 wrapper，避免 Drop 被调用
-            std::mem::forget(boxes_wrapper);
-            std::mem::forget(rotated_boxes_wrapper);
-            std::mem::forget(scores_wrapper);
-            std::mem::forget(label_ids_wrapper);
             detection_result
         }
     }
@@ -285,12 +269,12 @@ impl Into<FD_C_DetectionResult> for DetectionResult {
 impl From<FD_C_DetectionResult> for DetectionResult {
     fn from(value: FD_C_DetectionResult) -> Self {
         Self {
-            boxes: fd_c_two_dim_array_float_to_vec_float(value.boxes),
-            rotated_boxes: fd_c_two_dim_array_float_to_vec_float(value.rotated_boxes),
-            scores: fd_c_one_dim_array_float_to_vec_f32(value.scores),
-            label_ids: fd_c_one_dim_array_int32_to_vec_i32(value.label_ids),
+            boxes: c_2_float_to_vec(value.boxes),
+            rotated_boxes: c_2_float_to_vec(value.rotated_boxes),
+            scores: c_1_float_to_vec(value.scores),
+            label_ids: c_1_int32_to_vec(value.label_ids),
             masks: fd_c_two_dim_mask_to_vec_mask(value.masks),
-            contain_masks: fd_c_bool_to_bool(value.contain_masks),
+            contain_masks: c_bool_to_bool(value.contain_masks),
             type_: ResultType::from(value.type_),
         }
     }
@@ -353,15 +337,31 @@ pub struct OCRResult {
 impl From<FD_C_OCRResult> for OCRResult {
     fn from(value: FD_C_OCRResult) -> Self {
         Self {
-            boxes: fd_c_two_dim_array_int32_to_vec_i32(value.boxes),
-            text: fd_one_dim_array_c_str_to_vec_string(value.text),
-            rec_scores: fd_c_one_dim_array_float_to_vec_f32(value.rec_scores),
-            cls_scores: fd_c_one_dim_array_float_to_vec_f32(value.cls_scores),
-            cls_labels: fd_c_one_dim_array_int32_to_vec_i32(value.cls_labels),
-            table_boxes: fd_c_two_dim_array_int32_to_vec_i32(value.table_boxes),
-            table_structure: fd_one_dim_array_c_str_to_vec_string(value.table_structure),
-            table_html: fd_c_cstr_to_string(value.table_html),
+            boxes: c_2_int32_to_vec(value.boxes),
+            text: c_1_str_to_vec(value.text),
+            rec_scores: c_1_float_to_vec(value.rec_scores),
+            cls_scores: c_1_float_to_vec(value.cls_scores),
+            cls_labels: c_1_int32_to_vec(value.cls_labels),
+            table_boxes: c_2_int32_to_vec(value.table_boxes),
+            table_structure: c_1_str_to_vec(value.table_structure),
+            table_html: cstr_to_string(value.table_html),
             type_: ResultType::from(value.type_),
+        }
+    }
+}
+
+impl Into<FD_C_OCRResult> for OCRResult {
+    fn into(self) -> FD_C_OCRResult {
+        FD_C_OCRResult {
+            boxes: vec_to_c_2_int32(self.boxes),
+            text: vec_to_c_1_cstr(self.text),
+            rec_scores: vec_to_c_1_float(self.rec_scores),
+            cls_scores: vec_to_c_1_float(self.cls_scores),
+            cls_labels: vec_to_c_1_int32(self.cls_labels),
+            table_boxes: vec_to_c_2_int32(self.table_boxes),
+            table_structure: vec_to_c_1_cstr(self.table_structure),
+            table_html: string_to_cstr(&self.table_html),
+            type_: self.type_ as FD_C_ResultType,
         }
     }
 }
